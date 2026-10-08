@@ -96,7 +96,6 @@ int main(int argc, char *argv[])
 
    args.ParseCheck();
    kappa = freq * M_PI;
-    std::cout << "Kappa = " << kappa << std::endl;
 
    // 2. Enable hardware devices such as GPUs, and programming models such as
    //    CUDA, OCCA, RAJA and OpenMP based on command line options.
@@ -114,14 +113,12 @@ int main(int argc, char *argv[])
    //    'ref_levels' of uniform refinement. We choose 'ref_levels' to be the
    //    largest number that gives a final mesh with no more than 25,000
    //    elements.
+   
+   for (int l = 0; l < ref_levels; l++)
    {
-      std::cout << "ref_levels = " << ref_levels << std::endl;
-      //int ref_levels = (int)floor(log(25000./mesh->GetNE())/log(2.)/dim);
-      for (int l = 0; l < ref_levels; l++)
-      {
-         mesh->UniformRefinement();
-      }
+      mesh->UniformRefinement();
    }
+   
 
    // 5. Define a finite element space on the mesh. Here we use the
    //    Raviart-Thomas finite elements of the specified order.

@@ -235,7 +235,7 @@ const DenseTensor ND_DofTransformation
 
 
 
-// Transformation for SkewGrad
+// Transformation for skwGrad
 // ordering (i0j0, i1j0, i0j1, i1j1), each row is a column major matrix
 const real_t ND_DofTransformation::T_data4D[216] =
 {
@@ -266,7 +266,7 @@ const real_t ND_DofTransformation::T_data4D[216] =
 
 };
 
- //Transformation for SkewGrad
+ //Transformation for skwGrad
 const DenseTensor ND_DofTransformation
 ::T4D(const_cast<real_t *>(ND_DofTransformation::T_data4D), 3, 3, 24);
 
@@ -303,7 +303,7 @@ const real_t ND_DofTransformation::TInv_data4D[216] =
 const DenseTensor ND_DofTransformation
 ::TInv4D(const_cast<real_t *>(TInv_data4D), 3, 3, 24);
 
-// Transformation for CURL
+// Transformation for curl
 // ordering (i0j0, i1j0, i0j1, i1j1), each row is a column major matrix
 const real_t CURL_DofTransformation::T_data4D[216] =
 {
@@ -377,11 +377,10 @@ ND_DofTransformation::ND_DofTransformation(int size, int ndim, int p, int num_ed
    , order(p)
    , nedofs(p)
    , ntdofs(p*(p-1))
-   //, ntetdofs(0) // not sure
    , ntetdofs(p*(p-1)*(p-2)*0.5)
    , nqdofs(2*p*(p-1))
    , nedges(num_edges)
-   , nplanars(0) // not sure
+   , nplanars(0)
    , nfaces(num_faces)
    , ftypes(face_types)
 {
@@ -436,11 +435,6 @@ void ND_DofTransformation::TransformPrimal(const Array<int> & Fo,
    Vector v2(data, 2);
    DenseMatrix T2;
     
-//        std::cout << "Face 3D Oreint 1 " << Fo[0] << std::endl;
-//        std::cout << "Face 3D Oreint 2 " << Fo[1] << std::endl;
-//        std::cout << "Face 3D Oreint 3 " << Fo[2] << std::endl;
-//        std::cout << "Face 3D Oreint 4 " << Fo[3] << std::endl;
-
    // Transform face DoFs
    for (int f=0; f<nfaces; f++)
    {
@@ -480,16 +474,6 @@ void ND_DofTransformation::TransformPrimal(const Array<int> & Po, const Array<in
    DenseMatrix T2_planar;
    DenseMatrix T2_facet;
     
-//    std::cout << "Planar Oreint 1 " << Po[0] << std::endl;
-//    std::cout << "Planar Oreint 2 " << Po[1] << std::endl;
-//    std::cout << "Planar Oreint 3 " << Po[2] << std::endl;
-//    std::cout << "Planar Oreint 4 " << Po[3] << std::endl;
-//    std::cout << "Planar Oreint 5 " << Po[4] << std::endl;
-//    std::cout << "Planar Oreint 6 " << Po[5] << std::endl;
-//    std::cout << "Planar Oreint 7 " << Po[6] << std::endl;
-//    std::cout << "Planar Oreint 8 " << Po[7] << std::endl;
-//    std::cout << "Planar Oreint 9 " << Po[8] << std::endl;
-//    std::cout << "Planar Oreint 10 " << Po[9] << std::endl;
 
    // Transform Planar DoFs
    for (int pl=0; pl<nplanars; pl++)
@@ -510,29 +494,6 @@ void ND_DofTransformation::TransformPrimal(const Array<int> & Po, const Array<in
       }
    }
     
-    // Transform Facet DoFs
-//    std::cout << "Primal Transform -----" << std::endl;
-//    std::cout << "Facet Oreint 1 " << Fo[0] << std::endl;
-//    std::cout << "Facet Oreint 2 " << Fo[1] << std::endl;
-//    std::cout << "Facet Oreint 3 " << Fo[2] << std::endl;
-//    std::cout << "Facet Oreint 4 " << Fo[3] << std::endl;
-//    std::cout << "Facet Oreint 5 " << Fo[4] << std::endl;
-//    if (Fo[0] > 23) {
-//        mfem_error("Invalid Orientation index");
-//    }
-//    if (Fo[1] > 23) {
-//        mfem_error("Invalid Orientation index");
-//    }
-//    if (Fo[2] > 23) {
-//        mfem_error("Invalid Orientation index");
-//    }
-//    if (Fo[3] > 23) {
-//        mfem_error("Invalid Orientation index");
-//    }
-//    if (Fo[4] > 23) {
-//        mfem_error("Invalid Orientation index");
-//    }
-    //std::cout << "Primal Start " << std::endl;
 
     for (int ft=0; ft<nfaces; ft++)
     {
@@ -556,41 +517,7 @@ void ND_DofTransformation::TransformPrimal(const Array<int> & Po, const Array<in
 void CURL_DofTransformation::TransformPrimal(const Array<int> & Fo,
                                            real_t *v) const
 {
-//   // Return immediately when no face DoFs are present
-//   if (IsIdentity()) { return; }
-//
-////   MFEM_VERIFY(Fo.Size() >= nfaces,
-////               "Face orientation array is shorter than the number of faces in "
-////               "ND_DofTransformation");
-//
-//   int of = 0;
-//   real_t data[2];
-//   Vector v2(data, 2);
-//   DenseMatrix T2;
-//    
-//        std::cout << "Face 3D Oreint 1 " << Fo[0] << std::endl;
-//        std::cout << "Face 3D Oreint 2 " << Fo[1] << std::endl;
-//        std::cout << "Face 3D Oreint 3 " << Fo[2] << std::endl;
-//        std::cout << "Face 3D Oreint 4 " << Fo[3] << std::endl;
-//
-//   // Transform face DoFs
-//   for (int f=0; f<nfaces; f++)
-//   {
-//      if (ftypes[f] == Geometry::TRIANGLE)
-//      {
-//         for (int i=0; i<ntdofs/2; i++)
-//         {
-//            v2 = &v[nedges*nedofs + of + 2*i];
-//            T2.UseExternalData(const_cast<real_t *>(T.GetData(Fo[f])), 2, 2);
-//            T2.Mult(v2, &v[nedges*nedofs + of + 2*i]);
-//         }
-//         of += ntdofs;
-//      }
-//      else
-//      {
-//         of += nqdofs;
-//      }
-//   }
+    mfem_error("Transform Primial method for 3D not valid for 4D");
 }
 
 
@@ -614,17 +541,6 @@ void CURL_DofTransformation::TransformPrimal(const Array<int> & Po, const Array<
    DenseMatrix T2_facet;
     
 
-    
-    // Transform Facet DoFs
-//    std::cout << "Primal Transform -----" << std::endl;
-//    std::cout << "Facet Oreint 1 " << Fo[0] << std::endl;
-//    std::cout << "Facet Oreint 2 " << Fo[1] << std::endl;
-//    std::cout << "Facet Oreint 3 " << Fo[2] << std::endl;
-//    std::cout << "Facet Oreint 4 " << Fo[3] << std::endl;
-//    std::cout << "Facet Oreint 5 " << Fo[4] << std::endl;
-
-    //std::cout << "Primal Start " << std::endl;
-
     for (int ft=0; ft<nfaces; ft++)
     {
        if (ftypes[ft] == Geometry::TETRAHEDRON)
@@ -632,18 +548,12 @@ void CURL_DofTransformation::TransformPrimal(const Array<int> & Po, const Array<
           for (int i=0; i<ntetdofs/3; i++)
           {
               v3 = &v[nedges*nedofs + nplanars*ntdofs + of_ft + 3*i];
-              //std::cout << "v3 = " << v3(0) << ", " << v3(1) << ", " << v3(2) << std::endl;
               T2_facet.UseExternalData(const_cast<real_t *>(T4D.GetData(Fo[ft])), 3, 3);
-              //std::cout << "Facet Oreint " << Fo[ft] << std::endl;
               if ((Fo[ft]%2 == 0) && (Fo[ft] != 0))
               {
-                  //std::cout << "Invalid orientation (Even orientation)" << std::endl;
                   mfem_error("Even orientation used");
               }
-              //T2_facet.Print(std::cout);
               T2_facet.Mult(v3, &v[nedges*nedofs + nplanars*ntdofs + of_ft + 3*i]);
-              //std::cout << "v3 = " << v[nedges*nedofs + nplanars*ntdofs + of_ft + 0] << ", " << v[nedges*nedofs + nplanars*ntdofs + of_ft + 1] << ", " << v[nedges*nedofs + nplanars*ntdofs + of_ft + 2] << std::endl;
-              //std::cout << std::endl;
           }
           of_ft += ntetdofs;
        }
@@ -652,12 +562,6 @@ void CURL_DofTransformation::TransformPrimal(const Array<int> & Po, const Array<
            mfem_error("Unsupported Facet Type");
        }
     }
-    
-    //std::cout << "Primal END " << std::endl;
-    //std::cout << std::endl;
-
-
-    
 }
 
 void ND_DofTransformation::InvTransformPrimal(const Array<int> & Fo,
@@ -732,7 +636,6 @@ void ND_DofTransformation::InvTransformPrimal(const Array<int> & Po, const Array
          of_pl += nqdofs;
       }
    }
-    //std::cout << "Inv-Primal" << std::endl;
 
     // Transform facet DoFs
     for (int ft=0; ft<nfaces; ft++)
@@ -758,36 +661,7 @@ void ND_DofTransformation::InvTransformPrimal(const Array<int> & Po, const Array
 void CURL_DofTransformation::InvTransformPrimal(const Array<int> & Fo,
                                               real_t *v) const
 {
-   // Return immediately when no face DoFs are present
-//   if (IsIdentity()) { return; }
-//
-//   MFEM_VERIFY(Fo.Size() >= nfaces,
-//               "Face orientation array is shorter than the number of faces in "
-//               "ND_DofTransformation");
-//
-//   int of = 0;
-//   real_t data[2];
-//   Vector v2(data, 2);
-//   DenseMatrix T2Inv;
-//
-//   // Transform face DoFs
-//   for (int f=0; f<nfaces; f++)
-//   {
-//      if (ftypes[f] == Geometry::TRIANGLE)
-//      {
-//         for (int i=0; i<ntdofs/2; i++)
-//         {
-//            v2 = &v[nedges*nedofs + of + 2*i];
-//            T2Inv.UseExternalData(const_cast<real_t *>(TInv.GetData(Fo[f])), 2, 2);
-//            T2Inv.Mult(v2, &v[nedges*nedofs + of + 2*i]);
-//         }
-//         of += ntdofs;
-//      }
-//      else
-//      {
-//         of += nqdofs;
-//      }
-//   }
+    mfem_error("InvTransformPrimal for 3D not valid in 4D");
 }
 
 void CURL_DofTransformation::InvTransformPrimal(const Array<int> & Po, const Array<int> & Fo,
@@ -817,13 +691,8 @@ void CURL_DofTransformation::InvTransformPrimal(const Array<int> & Po, const Arr
           for (int i=0; i<ntetdofs/3; i++)
           {
              v3 = &v[nedges*nedofs + nplanars*ntdofs + of_ft + 3*i];
-              //std::cout << "v3 = " << v3(0) << ", " << v3(1) << ", " << v3(2) << std::endl;
              T2Inv_facet.UseExternalData(const_cast<real_t *>(TInv4D.GetData(Fo[ft])), 3, 3);
-              //std::cout << "Facet Oreint " << Fo[ft] << std::endl;
-
              T2Inv_facet.Mult(v3, &v[nedges*nedofs + nplanars*ntdofs + of_ft + 3*i]);
-              //std::cout << "v3 = " << v[nedges*nedofs + nplanars*ntdofs + of_ft + 0] << ", " << v[nedges*nedofs + nplanars*ntdofs + of_ft + 1] << ", " << v[nedges*nedofs + nplanars*ntdofs + of_ft + 2] << std::endl;
-              //std::cout << std::endl;
 
           }
           of_ft += ntetdofs;
@@ -908,7 +777,6 @@ void ND_DofTransformation::TransformDual(const Array<int> & Po, const Array<int>
       }
 
    }
-    //std::cout << "Start of Dual ------" << std::endl;
     // Transform face DoFs
     for (int ft=0; ft<nfaces; ft++)
     {
@@ -917,15 +785,8 @@ void ND_DofTransformation::TransformDual(const Array<int> & Po, const Array<int>
           for (int i=0; i<ntetdofs/3; i++)
           {
              v3 = &v[nedges*nedofs +nplanars*ntdofs + of_ft + 3*i];
-              //std::cout << "v3 = " << v3(0) << ", " << v3(1) << ", " << v3(2) << std::endl;
-
              T2Inv_factets.UseExternalData(const_cast<real_t *>(TInv4D.GetData(Fo[ft])), 3, 3);
-              //std::cout << "Facet Oreint " << Fo[ft] << std::endl;
-
              T2Inv_factets.MultTranspose(v3, &v[nedges*nedofs + nplanars*ntdofs + of_ft + 3*i]);
-              
-              //std::cout << "v3 = " << v[nedges*nedofs + nplanars*ntdofs + of_ft + 0] << ", " << v[nedges*nedofs + nplanars*ntdofs + of_ft + 1] << ", " << v[nedges*nedofs + nplanars*ntdofs + of_ft + 2] << std::endl;
-              //std::cout << std::endl;
           }
           of_ft += ntetdofs;
        }
@@ -935,42 +796,11 @@ void ND_DofTransformation::TransformDual(const Array<int> & Po, const Array<int>
        }
 
     }
-    //std::cout << "End of Dual ---------" << std::endl;
 }
 
 void CURL_DofTransformation::TransformDual(const Array<int> & Fo, real_t *v) const
 {
-   // Return immediately when no face DoFs are present
-//   if (IsIdentity()) { return; }
-//
-//   MFEM_VERIFY(Fo.Size() >= nfaces,
-//               "Face orientation array is shorter than the number of faces in "
-//               "ND_DofTransformation");
-//
-//   int of = 0;
-//   real_t data[2];
-//   Vector v2(data, 2);
-//   DenseMatrix T2Inv;
-//
-//   // Transform face DoFs
-//   for (int f=0; f<nfaces; f++)
-//   {
-//      if (ftypes[f] == Geometry::TRIANGLE)
-//      {
-//         for (int i=0; i<ntdofs/2; i++)
-//         {
-//            v2 = &v[nedges*nedofs + of + 2*i];
-//            T2Inv.UseExternalData(const_cast<real_t *>(TInv.GetData(Fo[f])), 2, 2);
-//            T2Inv.MultTranspose(v2, &v[nedges*nedofs + of + 2*i]);
-//         }
-//         of += ntdofs;
-//      }
-//      else
-//      {
-//         of += nqdofs;
-//      }
-//
-//   }
+    mfem_error("Transform Dual for 3D not valid in 4D");
 }
 
 void CURL_DofTransformation::TransformDual(const Array<int> & Po, const Array<int> & Fo, real_t *v) const
@@ -992,7 +822,6 @@ void CURL_DofTransformation::TransformDual(const Array<int> & Po, const Array<in
    DenseMatrix T2Inv_factets;
 
 
-    //std::cout << "New Ele" << "--------" << std::endl;
     // Transform face DoFs
     for (int ft=0; ft<nfaces; ft++)
     {
@@ -1001,17 +830,12 @@ void CURL_DofTransformation::TransformDual(const Array<int> & Po, const Array<in
           for (int i=0; i<ntetdofs/3; i++)
           {
              v3 = &v[nedges*nedofs +nplanars*ntdofs + of_ft + 3*i];
-             //std::cout << "v3 = " << v3(0) << ", " << v3(1) << ", " << v3(2) << std::endl;
              T2Inv_factets.UseExternalData(const_cast<real_t *>(TInv4D.GetData(Fo[ft])), 3, 3);
-             //std::cout << "Facet Oreint " << Fo[ft] << std::endl;
               if ((Fo[ft]%2 == 0) && (Fo[ft] != 0))
               {
-                  //std::cout << "Invalid orientation (Even orientation)" << std::endl;
                   mfem_error("Even orientation used");
               }
              T2Inv_factets.MultTranspose(v3, &v[nedges*nedofs + nplanars*ntdofs + of_ft + 3*i]);
-             //std::cout << "v3 = " << v[nedges*nedofs + nplanars*ntdofs + of_ft + 0] << ", " << v[nedges*nedofs + nplanars*ntdofs + of_ft + 1] << ", " << v[nedges*nedofs + nplanars*ntdofs + of_ft + 2] << std::endl;
-             //std::cout << std::endl;
           }
           of_ft += ntetdofs;
        }
@@ -1119,36 +943,7 @@ void ND_DofTransformation::InvTransformDual(const Array<int> & Po, const Array<i
 void CURL_DofTransformation::InvTransformDual(const Array<int> & Fo,
                                             real_t *v) const
 {
-   // Return immediately when no face DoFs are present
-//   if (IsIdentity()) { return; }
-//
-//   MFEM_VERIFY(Fo.Size() >= nfaces,
-//               "Face orientation array is shorter than the number of faces in "
-//               "ND_DofTransformation");
-//
-//   int of = 0;
-//   real_t data[2];
-//   Vector v2(data, 2);
-//   DenseMatrix T2;
-//
-//   // Transform face DoFs
-//   for (int f=0; f<nfaces; f++)
-//   {
-//      if (ftypes[f] == Geometry::TRIANGLE)
-//      {
-//         for (int i=0; i<ntdofs/2; i++)
-//         {
-//            v2 = &v[nedges*nedofs + of + 2*i];
-//            T2.UseExternalData(const_cast<real_t *>(T.GetData(Fo[f])), 2, 2);
-//            T2.MultTranspose(v2, &v[nedges*nedofs + of + 2*i]);
-//         }
-//         of += ntdofs;
-//      }
-//      else
-//      {
-//         of += nqdofs;
-//      }
-//   }
+    mfem_error("InvTransformDual for 3D not valid in 4D");
 }
 
 void CURL_DofTransformation::InvTransformDual(const Array<int> & Po, const Array<int> & Fo,
@@ -1170,24 +965,6 @@ void CURL_DofTransformation::InvTransformDual(const Array<int> & Po, const Array
    DenseMatrix T2_planars;
    DenseMatrix T2_facets;
 
-//   // Transform planar DoFs
-//   for (int pl=0; pl<nplanars; pl++)
-//   {
-//      if (ptypes[pl] == Geometry::TRIANGLE)
-//      {
-//         for (int i=0; i<ntdofs/2; i++)
-//         {
-//            v2 = &v[nedges*nedofs + of_pl + 2*i];
-//            T2_planars.UseExternalData(const_cast<real_t *>(T.GetData(Po[pl])), 2, 2);
-//            T2_planars.MultTranspose(v2, &v[nedges*nedofs + of_pl + 2*i]);
-//         }
-//         of_pl += ntdofs;
-//      }
-//      else
-//      {
-//         of_pl += nqdofs;
-//      }
-//   }
     
     // Transform face DoFs
     for (int ft=0; ft<nfaces; ft++)
@@ -1208,7 +985,5 @@ void CURL_DofTransformation::InvTransformDual(const Array<int> & Po, const Array
        }
     }
 }
-
-
 
 } // namespace mfem

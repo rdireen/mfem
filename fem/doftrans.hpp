@@ -420,16 +420,6 @@ public:
    {}
 };
 
-/////// DoF transformation implementation for the Nedelec basis on Pentatope
-//class ND_PentDofTransformation : public ND_DofTransformation
-//{
-//public:
-//   ND_PentDofTransformation(int order)
-//      : ND_DofTransformation(order*(order + 2)*(order + 3)*(order + 4)/6, 4, order, 10, 10,
-//                             (int *)Geometry::Constants<Geometry::PENTATOPE>::
-//                             PlanarTypes)
-//   {}
-//};
 
 /// DoF transformation implementation for the Nedelec basis on wedge elements
 class ND_WedgeDofTransformation : public ND_DofTransformation

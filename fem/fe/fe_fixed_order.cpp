@@ -4782,77 +4782,7 @@ void Nedelec1PentFiniteElement::CalcCurlShape(const IntegrationPoint &ip,
                                               DenseMatrix &curl_shape)
 const
 {
-    /*
-    curl_shape(0,0) =  0.;
-    curl_shape(0,1) =  0.;
-    curl_shape(0,2) =  0.;
-    curl_shape(0,3) =  2.;
-    curl_shape(0,4) =  -2.;
-    curl_shape(0,5) =  2.;
 
-    curl_shape(1,0) =  0.;
-    curl_shape(1,1) =  -2.;
-    curl_shape(1,2) =  2.;
-    curl_shape(1,3) =  0.;
-    curl_shape(1,4) =  0.;
-    curl_shape(1,5) =  -2.;
-
-    curl_shape(2,0) =  2.;
-    curl_shape(2,1) =  0.;
-    curl_shape(2,2) =  -2.;
-    curl_shape(2,3) =  0.;
-    curl_shape(2,4) =  2.;
-    curl_shape(2,5) =  0.;
-
-    curl_shape(3,0) =  -2.;
-    curl_shape(3,1) =  2.;
-    curl_shape(3,2) =  0.;
-    curl_shape(3,3) =  -2.;
-    curl_shape(3,4) =  0.;
-    curl_shape(3,5) =  0.;
-
-    curl_shape(4,0) =  0.;
-    curl_shape(4,1) =  0.;
-    curl_shape(4,2) =  0.;
-    curl_shape(4,3) =  0.;
-    curl_shape(4,4) =  0.;
-    curl_shape(4,5) =  2.;
-
-    curl_shape(5,0) =  0.;
-    curl_shape(5,1) =  0.;
-    curl_shape(5,2) =  0.;
-    curl_shape(5,3) =  0.;
-    curl_shape(5,4) =  -2.;
-    curl_shape(5,5) =  0.;
-
-    curl_shape(6,0) =  0.;
-    curl_shape(6,1) =  0.;
-    curl_shape(6,2) =  0.;
-    curl_shape(6,3) =  2.;
-    curl_shape(6,4) =  0.;
-    curl_shape(6,5) =  0.;
-
-    curl_shape(7,0) =  0.;
-    curl_shape(7,1) =  0.;
-    curl_shape(7,2) =  2.;
-    curl_shape(7,3) =  0.;
-    curl_shape(7,4) =  0.;
-    curl_shape(7,5) =  0.;
-
-    curl_shape(8,0) =  0.;
-    curl_shape(8,1) =  -2.;
-    curl_shape(8,2) =  0.;
-    curl_shape(8,3) =  0.;
-    curl_shape(8,4) =  0.;
-    curl_shape(8,5) =  0.;
-
-    curl_shape(9,0) =  2.;
-    curl_shape(9,1) =  0.;
-    curl_shape(9,2) =  0.;
-    curl_shape(9,3) =  0.;
-    curl_shape(9,4) =  0.;
-    curl_shape(9,5) =  0.;
-   */
    curl_shape(0,0) =  2.;
    curl_shape(0,1) =  2.;
    curl_shape(0,2) =  2.;
@@ -5613,13 +5543,7 @@ void DivSkew1PentFiniteElement::CalcVShape(const IntegrationPoint &ip,
                                            DenseMatrix &shape) const
 {
    double x1 = ip.x, x2 = ip.y, x3 = ip.z, x4 = ip.t;
-//    std::cout << "x_ip = " << x1 << std::endl;
-//    std::cout << "y_ip = " << x2 << std::endl;
-//    std::cout << "z_ip = " << x3 << std::endl;
-//    std::cout << "t_ip = " << x4 << std::endl;
-    
-    
-    
+
    shape(0,0) = 0.;
    shape(0,1) = 0.;
    shape(0,2) = x1;
@@ -5790,30 +5714,6 @@ void DivSkew1PentFiniteElement::CalcVShape(const IntegrationPoint &ip,
    shape(9,14) = 0.;
    shape(9,15) = 0.;
     
-//        for (int mod=0; mod < 10; mod++)
-//        {
-//            std::cout << "Start -----" << std::endl;
-//            std::cout << shape(mod,0) << ", ";
-//            std::cout << shape(mod,1) << ", ";
-//            std::cout << shape(mod,2) << ", ";
-//            std::cout << shape(mod,3) << std::endl;
-//            std::cout << shape(mod,4) << ", ";
-//            std::cout << shape(mod,5) << ", ";
-//            std::cout << shape(mod,6) << ", ";
-//            std::cout << shape(mod,7) << std::endl;
-//            std::cout << shape(mod,8) << ", ";
-//            std::cout << shape(mod,9) << ", ";
-//            std::cout << shape(mod,10) << ", ";
-//            std::cout << shape(mod,11) << std::endl;
-//            std::cout << shape(mod,12) << ", ";
-//            std::cout << shape(mod,13) << ", ";
-//            std::cout << shape(mod,14) << ", ";
-//            std::cout << shape(mod,15) << std::endl;
-//            std::cout << std::endl;
-//    
-//    
-//        }
-//    std::cout << "This is the end" << std::endl;
 
 }
 
@@ -5889,62 +5789,19 @@ void DivSkew1PentFiniteElement::Project (
 
       vc.Eval(v, Trans, Nodes.IntPoint (k));
        
-       //std::cout << "Exact solution values" << std::endl;
-//       std::cout << v(0) << ", ";
-//       std::cout << v(1) << ", ";
-//       std::cout << v(2) << ", ";
-//       std::cout << v(3) << ", ";
-//       std::cout << v(4) << ", ";
-//       std::cout << v(5) << std::endl;
 
       mat(0,1) =  v(5); mat(0,2) = -v(4); mat(0,3) =  v(3);
       mat(1,0) = -v(5);                   mat(1,2) =  v(2); mat(1,3) = -v(1);
       mat(2,0) =  v(4); mat(2,1) = -v(2);                   mat(2,3) =  v(0);
       mat(3,0) = -v(3); mat(3,1) =  v(1); mat(3,2) = -v(0);
-       
-//       std::cout << "Start of DivSkew Matrix Check" << std::endl;
-//       std::cout << mat(0,0) << ", ";
-//       std::cout << mat(0,1) << ", ";
-//       std::cout << mat(0,2) << ", ";
-//       std::cout << mat(0,3) << ", " << std::endl;
-//       
-//       std::cout << mat(1,0) << ", ";
-//       std::cout << mat(1,1) << ", ";
-//       std::cout << mat(1,2) << ", ";
-//       std::cout << mat(1,3) << ", " << std::endl;
-//       
-//       std::cout << mat(2,0) << ", ";
-//       std::cout << mat(2,1) << ", ";
-//       std::cout << mat(2,2) << ", ";
-//       std::cout << mat(2,3) << ", " << std::endl;
-//       
-//       std::cout << mat(3,0) << ", ";
-//       std::cout << mat(3,1) << ", ";
-//       std::cout << mat(3,2) << ", ";
-//       std::cout << mat(3,3) << ", " << std::endl;
-//       std::cout << std::endl;
-
-
+    
       J.Mult(tk1[k],t1);
       J.Mult(tk2[k],t2);
        
-//      std::cout << "t1 = " << t1[0] << ", " << t1[1] << ", " << t1[2] << ", " << t1[3] << std::endl;
-//      std::cout << "t2 = " << t2[0] << ", " << t2[1] << ", " << t2[2] << ", " << t2[3] << std::endl;
-//      std::cout << std::endl;
-
-
 
       mat.Mult(t2i, Mt);
        
-       
-       
-//       std::cout << "t1i = " << t1i(0) << ", " << t1i(1) << ", " << t1i(2) << ", " << t1i(3) << std::endl;
-//       std::cout << "Mt = " << Mt(0) << ", " << Mt(1) << ", " << Mt(2) << ", " << Mt(3) << std::endl;
-//       std::cout << std::endl;
-
-
       dofs(k) = t1i * Mt;
-      //std::cout << "dof(k) = " << t1i * Mt << std::endl;
    }
 }
 

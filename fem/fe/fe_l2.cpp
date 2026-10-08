@@ -1280,59 +1280,42 @@ void L2_PentatopeElement_MMCP::CalcDShape(const IntegrationPoint &ip,
 
 
                          
-                         // Create Derivative of Basis
+                         // Compute Derivative of Basis
+                         du(o,0) = (Legendre_i_dx[Legendre_i_dx.size()-1]*grad_Lb[0] + Legendre_i_dt[Legendre_i_dt.size()-1]*(grad_La[0] + grad_Lb[0])) * Jacobi_j[Jacobi_j.size()-1] * Jacobi_l[Jacobi_l.size()-1] * Jacobi_m[Jacobi_m.size()-1]
                          
-
-                         
-                         double f_dx = (Legendre_i_dx[Legendre_i_dx.size()-1]*grad_Lb[0] + Legendre_i_dt[Legendre_i_dt.size()-1]*(grad_La[0] + grad_Lb[0])) * Jacobi_j[Jacobi_j.size()-1] * Jacobi_l[Jacobi_l.size()-1] * Jacobi_m[Jacobi_m.size()-1]
-                             
-                         + Legendre_i[Legendre_i.size()-1]*(Jacobi_j_dx[Jacobi_j_dx.size()-1]*grad_Lc[0] 
+                         + Legendre_i[Legendre_i.size()-1]*(Jacobi_j_dx[Jacobi_j_dx.size()-1]*grad_Lc[0]
                                                             + Jacobi_j_dt[Jacobi_j_dt.size()-1]*(grad_La[0]+grad_Lb[0]+grad_Lc[0])) * Jacobi_l[Jacobi_l.size()-1]*Jacobi_m[Jacobi_m.size()-1]
                          
                          + Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * (Jacobi_l_dx[Jacobi_l_dx.size()-1]*grad_Ld[0] + Jacobi_l_dt[Jacobi_l_dt.size()-1]*(grad_La[0]+grad_Lb[0]+grad_Lc[0]+grad_Ld[0]))*Jacobi_m[Jacobi_m.size()-1]
                          
                          + Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1]*Jacobi_l[Jacobi_l.size()-1]*(Jacobi_m_dx[Jacobi_m_dx.size()-1]*grad_Le[0]);
+                        
+                                                  
+                         du(o,1) = (Legendre_i_dx[Legendre_i_dx.size()-1]*grad_Lb[1] + Legendre_i_dt[Legendre_i_dt.size()-1]*(grad_La[1] + grad_Lb[1])) * Jacobi_j[Jacobi_j.size()-1] * Jacobi_l[Jacobi_l.size()-1] * Jacobi_m[Jacobi_m.size()-1]
                          
-                         du(o,0) = f_dx;
-                         //std::cout << "f_dx = " << f_dx << std::endl;
-                         
-                         double f_dy = (Legendre_i_dx[Legendre_i_dx.size()-1]*grad_Lb[1] + Legendre_i_dt[Legendre_i_dt.size()-1]*(grad_La[1] + grad_Lb[1])) * Jacobi_j[Jacobi_j.size()-1] * Jacobi_l[Jacobi_l.size()-1] * Jacobi_m[Jacobi_m.size()-1]
-                             
                          + Legendre_i[Legendre_i.size()-1]*(Jacobi_j_dx[Jacobi_j_dx.size()-1]*grad_Lc[1] + Jacobi_j_dt[Jacobi_j_dt.size()-1]*(grad_La[1]+grad_Lb[1]+grad_Lc[1])) * Jacobi_l[Jacobi_l.size()-1]*Jacobi_m[Jacobi_m.size()-1]
                          
                          + Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * (Jacobi_l_dx[Jacobi_l_dx.size()-1]*grad_Ld[1] + Jacobi_l_dt[Jacobi_l_dt.size()-1]*(grad_La[1]+grad_Lb[1]+grad_Lc[1]+grad_Ld[1]))*Jacobi_m[Jacobi_m.size()-1]
                          
                          + Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1]*Jacobi_l[Jacobi_l.size()-1]*(Jacobi_m_dx[Jacobi_m_dx.size()-1]*grad_Le[1]);
-                         
-                         du(o,1) = f_dy;
-                         //std::cout << "f_dy= " << f_dy << std::endl;
 
                          
-                         double f_dz_1 = (Legendre_i_dx[Legendre_i_dx.size()-1]*grad_Lb[2] + Legendre_i_dt[Legendre_i_dt.size()-1]*(grad_La[2] + grad_Lb[2])) * Jacobi_j[Jacobi_j.size()-1] * Jacobi_l[Jacobi_l.size()-1] * Jacobi_m[Jacobi_m.size()-1];
+                         du(o,2)  = (Legendre_i_dx[Legendre_i_dx.size()-1]*grad_Lb[2] + Legendre_i_dt[Legendre_i_dt.size()-1]*(grad_La[2] + grad_Lb[2])) * Jacobi_j[Jacobi_j.size()-1] * Jacobi_l[Jacobi_l.size()-1] * Jacobi_m[Jacobi_m.size()-1]
                              
-                         double f_dz_2 =  Legendre_i[Legendre_i.size()-1]*(Jacobi_j_dx[Jacobi_j_dx.size()-1]*grad_Lc[2] + Jacobi_j_dt[Jacobi_j_dt.size()-1]*(grad_La[2]+grad_Lb[2]+grad_Lc[2])) * Jacobi_l[Jacobi_l.size()-1]*Jacobi_m[Jacobi_m.size()-1];
+                         + Legendre_i[Legendre_i.size()-1]*(Jacobi_j_dx[Jacobi_j_dx.size()-1]*grad_Lc[2] + Jacobi_j_dt[Jacobi_j_dt.size()-1]*(grad_La[2]+grad_Lb[2]+grad_Lc[2])) * Jacobi_l[Jacobi_l.size()-1]*Jacobi_m[Jacobi_m.size()-1]
                          
-                         double f_dz_3 =  Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * (Jacobi_l_dx[Jacobi_l_dx.size()-1]*grad_Ld[2] + Jacobi_l_dt[Jacobi_l_dt.size()-1]*(grad_La[2]+grad_Lb[2]+grad_Lc[2]+grad_Ld[2]))*Jacobi_m[Jacobi_m.size()-1];
+                         + Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * (Jacobi_l_dx[Jacobi_l_dx.size()-1]*grad_Ld[2] + Jacobi_l_dt[Jacobi_l_dt.size()-1]*(grad_La[2]+grad_Lb[2]+grad_Lc[2]+grad_Ld[2]))*Jacobi_m[Jacobi_m.size()-1]
                          
-                         double f_dz_4 = Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1]*Jacobi_l[Jacobi_l.size()-1]*(Jacobi_m_dx[Jacobi_m_dx.size()-1]*grad_Le[2]);
+                         + Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1]*Jacobi_l[Jacobi_l.size()-1]*(Jacobi_m_dx[Jacobi_m_dx.size()-1]*grad_Le[2]);
                          
-                         du(o,2) = f_dz_1 + f_dz_2 + f_dz_3 + f_dz_4;
-                         //std::cout << "f_dz = " << f_dz_1 + f_dz_2 + f_dz_3 + f_dz_4 << std::endl;
-
                          
-                         double f_dt = (Legendre_i_dx[Legendre_i_dx.size()-1]*grad_Lb[3] + Legendre_i_dt[Legendre_i_dt.size()-1]*(grad_La[3] + grad_Lb[3])) * Jacobi_j[Jacobi_j.size()-1] * Jacobi_l[Jacobi_l.size()-1] * Jacobi_m[Jacobi_m.size()-1]
-                             
+                         du(o,3) = (Legendre_i_dx[Legendre_i_dx.size()-1]*grad_Lb[3] + Legendre_i_dt[Legendre_i_dt.size()-1]*(grad_La[3] + grad_Lb[3])) * Jacobi_j[Jacobi_j.size()-1] * Jacobi_l[Jacobi_l.size()-1] * Jacobi_m[Jacobi_m.size()-1]
+                         
                          + Legendre_i[Legendre_i.size()-1]*(Jacobi_j_dx[Jacobi_j_dx.size()-1]*grad_Lc[3] + Jacobi_j_dt[Jacobi_j_dt.size()-1]*(grad_La[3]+grad_Lb[3]+grad_Lc[3])) * Jacobi_l[Jacobi_l.size()-1]*Jacobi_m[Jacobi_m.size()-1]
                          
                          + Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * (Jacobi_l_dx[Jacobi_l_dx.size()-1]*grad_Ld[3] + Jacobi_l_dt[Jacobi_l_dt.size()-1]*(grad_La[3]+grad_Lb[3]+grad_Lc[3]+grad_Ld[3]))*Jacobi_m[Jacobi_m.size()-1]
                          
-                         + Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1]*Jacobi_l[Jacobi_l.size()-1]*(Jacobi_m_dx[Jacobi_m_dx.size()-1]*grad_Le[3]);
-                         
-                         du(o,3) = f_dt;
-                         //std::cout << "f_dt = " << f_dt << std::endl;
-                         //std::cout << "END" << std::endl;
-
-                         
+                         + Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1]*Jacobi_l[Jacobi_l.size()-1]*(Jacobi_m_dx[Jacobi_m_dx.size()-1]*grad_Le[3]);;
                          
                          o++;
                          

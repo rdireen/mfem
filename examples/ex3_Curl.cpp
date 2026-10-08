@@ -52,7 +52,6 @@ using namespace mfem;
 
 // Exact solution, E, and r.h.s., f. See below for implementation.
 void E_exact_vec(const Vector &x, Vector &E);
-void E_initial_vec(const Vector &x, Vector &E);
 void E_exact(const Vector &, DenseMatrix &);
 void f_exact(const Vector &, DenseMatrix &);
 real_t freq = 1.0, kappa;
@@ -98,7 +97,6 @@ int main(int argc, char *argv[])
       return 1;
    }
    args.PrintOptions(cout);
-   //kappa = freq * M_PI;
    kappa = 1.0;
 
    // 2. Enable hardware devices such as GPUs, and programming models such as
@@ -123,19 +121,14 @@ int main(int argc, char *argv[])
    //    'ref_levels' of uniform refinement. We choose 'ref_levels' to be the
    //    largest number that gives a final mesh with no more than 50,000
    //    elements.
+   for (int l = 0; l < ref_levels; l++)
    {
-      //int ref_levels =
-         //(int)floor(log(50000./mesh->GetNE())/log(2.)/dim);
-      for (int l = 0; l < ref_levels; l++)
-      {
-         mesh->UniformRefinement();
-      }
+      mesh->UniformRefinement();
    }
+   
 
    // 5. Define a finite element space on the mesh. Here we use the Nedelec
    //    finite elements of the specified order.
-   //FiniteElementCollection *fec = new DivSkew1_4DFECollection();
-   std::cout << "HCURL FECollection Used" << std::endl;
    FiniteElementCollection *fec = new HCurl_FECollection(order, dim);
    FiniteElementSpace *fespace = new FiniteElementSpace(mesh, fec);
    cout << "Number of finite element unknowns: "
@@ -158,19 +151,11 @@ int main(int argc, char *argv[])
    //    given by the function f_exact and phi_i are the basis functions in the
    //    finite element fespace.
    MatrixFunctionCoefficient f(sdim, f_exact);
-   //MatrixFunctionCoefficient solMat(sdim, E_exact);
    VectorFunctionCoefficient solVec(12, E_exact_vec);
-   VectorFunctionCoefficient solVec_initial(12, E_initial_vec);
-   //VectorFunctionCoefficient f(sdim, f_exact);
     
-   //Vector zero_c(12);
-   //zero_c = 0.0;
-   //VectorConstantCoefficient dbcCoef(zero_c);
     
    LinearForm *b = new LinearForm(fespace);
-   //b->AddDomainIntegrator(new VectorFEDomainLFIntegrator(f));
    b->AddDomainIntegrator(new MatFEDomainLFIntegrator(f));
-
    b->Assemble();
 
    // 8. Define the solution vector x as a finite element grid function
@@ -179,15 +164,7 @@ int main(int argc, char *argv[])
    //    when eliminating the non-homogeneous boundary condition to modify the
    //    r.h.s. vector b.
    GridFunction x(fespace);
-   //VectorFunctionCoefficient E(sdim, E_exact);
-   //x.ProjectCoefficient(E);
    x.ProjectCoefficient(solVec);
-   //x.ProjectBdrCoefficient(dbcCoef, ess_tdof_list);
-
-    
-
-
-    //x.Print(std::cout);
 
     
     const IntegrationRule* irs[Geometry::NumGeom];
@@ -209,10 +186,8 @@ int main(int argc, char *argv[])
     }
 
 
-    //cout << "\n Initial || E_h - E ||_{L^2} = " << x.ComputeL2Error(solVec,irs) << '\n' << endl;
-//
-//    cout << "Number of finite element unknowns: "
-//         << fespace->GetTrueVSize() << endl;
+    cout << "\n Initial || E_h - E ||_{L^2} = " << x.ComputeL2Error(solVec,irs) << '\n' << endl;
+    cout << "Number of finite element unknowns: " << fespace->GetTrueVSize() << endl;
 
 
    // 9. Set up the bilinear form corresponding to the EM diffusion operator
@@ -223,10 +198,6 @@ int main(int argc, char *argv[])
    BilinearForm *a = new BilinearForm(fespace);
    if (pa) { a->SetAssemblyLevel(AssemblyLevel::PARTIAL); }
    a->AddDomainIntegrator(new CurlCurlIntegrator(*muinv));
-   //a->AddDomainIntegrator(new SkwGradSkwGradIntegrator(*muinv));
-   //a->AddDomainIntegrator(new DivSkewDivSkewIntegrator(*muinv));
-   //a->AddDomainIntegrator(new VectorFEMassIntegrator(*sigma));
-   //a->AddDomainIntegrator(new VectorFE_DivSkewMassIntegrator(*sigma));
    a->AddDomainIntegrator(new VectorFE_CurlMassIntegrator(*sigma));
 
 
@@ -323,146 +294,32 @@ void E_exact_vec(const Vector &x, Vector &E)
       double c0 = cos(M_PI*x(0)), c1 = cos(M_PI*x(1)), c2 = cos(M_PI*x(2)),
              c3 = cos(M_PI*x(3));
 
-// Current high order solution 
-              E(5) =  c0*c1*s2*s3;
-              E(4) =  c0*s1*c2*s3;
-              E(3) =  c0*s1*s2*c3;
-              E(2) =  s0*c1*c2*s3;
-              E(1) =  s0*c1*s2*c3;
-              E(0) =  s0*s1*c2*c3;
-
-//            
-//       E(5) =  1.0;
-//       E(4) =  2.0;
-//       E(3) =  3.0;
-//       E(2) =  4.0;
-//       E(1) =  5.0;
-//       E(0) =  6.0;
-//
-//       E(0) =  x(0);
-//       E(1) =  x(1) + 1.;
-//       E(2) =  x(2)+2.;
-//       E(3) =  0.15*x(3);
-//       E(4) =  0.5*(x(1) + x(0));
-//       E(5) =  0.25*(x(2) + x(3));
+      // Current high order solution
+      E(5) =  c0*c1*s2*s3;
+      E(4) =  c0*s1*c2*s3;
+      E(3) =  c0*s1*s2*c3;
+      E(2) =  s0*c1*c2*s3;
+      E(1) =  s0*c1*s2*c3;
+      E(0) =  s0*s1*c2*c3;
        
-       E(0) =  sf * E(0);
-       E(1) =  sf * E(1);
-       E(2) =  sf * E(2);
-       E(3) =  sf * E(3);
-       E(4) =  sf * E(4);
-       E(5) =  sf * E(5);
+      E(0) =  sf * E(0);
+      E(1) =  sf * E(1);
+      E(2) =  sf * E(2);
+      E(3) =  sf * E(3);
+      E(4) =  sf * E(4);
+      E(5) =  sf * E(5);
        
        
-//       E(0) =  x(0)*x(0);
-//       E(1) =  x(1)*x(1) + 1;
-//       E(2) =  x(2)*x(2) +2;
-//       E(3) =  0.15*x(3)*x(3);
-//       E(4) =  0.5*(x(1)*x(1) + x(0)*x(0));
-//       E(5) =  0.25*(x(2)*x(2) + x(3)*x(3));
-       
-       E(6) =  -1.0 * E(0);
-       E(7) =  -1.0 * E(1);
-       E(8) =  -1.0 * E(3);
-       E(9) =  -1.0 * E(2);
-       E(10) = -1.0 * E(4);
-       E(11) = -1.0 * E(5);
-       
+      E(6) =  -1.0 * E(0);
+      E(7) =  -1.0 * E(1);
+      E(8) =  -1.0 * E(3);
+      E(9) =  -1.0 * E(2);
+      E(10) = -1.0 * E(4);
+      E(11) = -1.0 * E(5);
        
    }
 }
 
-void E_initial_vec(const Vector &x, Vector &E)
-{
-   int dim = x.Size();
-
-   if (dim==4)
-   {
-      //E.SetSize(6);
-      E.SetSize(12);
-       double sf = 0.5;
-
-      double s0 = sin(M_PI*x(0)), s1 = sin(M_PI*x(1)), s2 = sin(M_PI*x(2)),
-             s3 = sin(M_PI*x(3));
-      double c0 = cos(M_PI*x(0)), c1 = cos(M_PI*x(1)), c2 = cos(M_PI*x(2)),
-             c3 = cos(M_PI*x(3));
-
-// Current high order solution
-//              E(5) =  c0*c1*s2*s3;
-//              E(4) =  c0*s1*c2*s3;
-//              E(3) =  c0*s1*s2*c3;
-//              E(2) =  s0*c1*c2*s3;
-//              E(1) =  s0*c1*s2*c3;
-//              E(0) =  s0*s1*c2*c3;
-
-            
-
-       double b_eps = 1e-10;
-       double rand_eps = 1e-1;
-       double xmin = 0.0;
-       double xmax = 1.0;
-
-       if ((fabs(x(0) - xmin) < b_eps) || (fabs(x(0) - xmax) < b_eps))
-       {
-           rand_eps = 0.0;
-       }
-       if ((fabs(x(1) - xmin) < b_eps) || (fabs(x(1) - xmax) < b_eps))
-       {
-           rand_eps = 0.0;
-       }
-       if ((fabs(x(2) - xmin) < b_eps) || (fabs(x(2) - xmax) < b_eps))
-       {
-           rand_eps = 0.0;
-       }
-       if ((fabs(x(3) - xmin) < b_eps) || (fabs(x(3) - xmax) < b_eps))
-       {
-           rand_eps = 0.0;
-       }
-       // Only for single element case ----
-       if (fabs(x(0)+x(1)+x(2)+x(3) -1.0) < b_eps)
-       {
-           rand_eps = 0.0;
-       }
-       
-       E(5) =  1.0 + rand_eps*(real_t(rand()) / real_t(RAND_MAX));
-       E(4) =  2.0 + rand_eps*(real_t(rand()) / real_t(RAND_MAX));
-       E(3) =  3.0 + rand_eps*(real_t(rand()) / real_t(RAND_MAX));
-       E(2) =  4.0 + rand_eps*(real_t(rand()) / real_t(RAND_MAX));
-       E(1) =  5.0 + rand_eps*(real_t(rand()) / real_t(RAND_MAX));
-       E(0) =  6.0+ rand_eps*(real_t(rand()) / real_t(RAND_MAX));
-       
-//       E(0) =  x(0) + rand_eps*(real_t(rand()) / real_t(RAND_MAX));
-//       E(1) =  x(1) + 1. + rand_eps*(real_t(rand()) / real_t(RAND_MAX));
-//       E(2) =  x(2)+2. + rand_eps*(real_t(rand()) / real_t(RAND_MAX));
-//       E(3) =  0.15*x(3) + rand_eps*(real_t(rand()) / real_t(RAND_MAX));
-//       E(4) =  0.5*(x(1) + x(0)) + rand_eps*(real_t(rand()) / real_t(RAND_MAX));
-//       E(5) =  0.25*(x(2) + x(3)) + rand_eps*(real_t(rand()) / real_t(RAND_MAX));
-       
-       E(0) =  sf * E(0);
-       E(1) =  sf * E(1);
-       E(2) =  sf * E(2);
-       E(3) =  sf * E(3);
-       E(4) =  sf * E(4);
-       E(5) =  sf * E(5);
-       
-       
-//       E(0) =  x(0)*x(0);
-//       E(1) =  x(1)*x(1) + 1;
-//       E(2) =  x(2)*x(2) +2;
-//       E(3) =  0.15*x(3)*x(3);
-//       E(4) =  0.5*(x(1)*x(1) + x(0)*x(0));
-//       E(5) =  0.25*(x(2)*x(2) + x(3)*x(3));
-       
-       E(6) =  -1.0 * E(0);
-       E(7) =  -1.0 * E(1);
-       E(8) =  -1.0 * E(3);
-       E(9) =  -1.0 * E(2);
-       E(10) = -1.0 * E(4);
-       E(11) = -1.0 * E(5);
-       
-       
-   }
-}
 
 
 void E_exact(const Vector &x, DenseMatrix &E)
@@ -495,7 +352,7 @@ void E_exact(const Vector &x, DenseMatrix &E)
 
 
 
-//f_exact = E + 0.5 * P( curl DivSkew E ), where P is the 4d permutation operator
+//f_exact = E + (Curl curl E ), where P is the 4d permutation operator
 void f_exact(const Vector &x, DenseMatrix &f)
 {
    int dim = x.Size();
@@ -511,43 +368,20 @@ void f_exact(const Vector &x, DenseMatrix &f)
       double c0 = cos(M_PI*x(0)), c1 = cos(M_PI*x(1)), c2 = cos(M_PI*x(2)),
              c3 = cos(M_PI*x(3));
        
-       f(2,3) =  (0.5 + 2.0  * M_PI*M_PI)*c0*c1*s2*s3;
-       f(1,3) =  (0.5 + 0.0  * M_PI*M_PI)*c0*s1*c2*s3;
-       f(1,2) =  (0.5 + 2.0  * M_PI*M_PI)*c0*s1*s2*c3;
-       f(0,3) =  (0.5 - 2.0  * M_PI*M_PI)*s0*c1*c2*s3;
-       f(0,2) =  (0.5 + 0.0  * M_PI*M_PI)*s0*c1*s2*c3;
-       f(0,1) =  (0.5 + 2.0  * M_PI*M_PI)*s0*s1*c2*c3;
+      f(2,3) =  (0.5 + 2.0  * M_PI*M_PI)*c0*c1*s2*s3;
+      f(1,3) =  (0.5 + 0.0  * M_PI*M_PI)*c0*s1*c2*s3;
+      f(1,2) =  (0.5 + 2.0  * M_PI*M_PI)*c0*s1*s2*c3;
+      f(0,3) =  (0.5 - 2.0  * M_PI*M_PI)*s0*c1*c2*s3;
+      f(0,2) =  (0.5 + 0.0  * M_PI*M_PI)*s0*c1*s2*c3;
+      f(0,1) =  (0.5 + 2.0  * M_PI*M_PI)*s0*s1*c2*c3;
        
-//       E(0) =  x(0);
-//       E(1) =  (x(1) + 1);
-//       E(2) =  x(2)+2;
-//       E(3) =  0.15*x(3);
-//       E(4) =  0.5*(x(1) + x(0));
-//       E(5) =  0.25*(x(2) + x(3));
-       
-       
-//       f(2,3) =  (0.5)*1.0;
-//       f(1,3) =  (0.5)*2.0;
-//       f(1,2) =  (0.5)*3.0;
-//       f(0,3) =  (0.5)*4.0;
-//       f(0,2) =  (0.5)*5.0;
-//       f(0,1) =  (0.5)*6.0;
-       
-//       f(2,3) =  (0.5)*(0.25*(x(2) + x(3)));
-//       f(1,3) =  (0.5)*(0.5*(x(1) + x(0)));
-//       f(1,2) =  (0.5)*(0.15*x(3));
-//       f(0,3) =  (0.5)*(x(2)+2.);
-//       f(0,2) =  (0.5)*(x(1) + 1.);
-//       f(0,1) =  (0.5)*x(0);
-
-
-       // Did not change
       f(1,0) =  -f(0,1);
       f(2,0) =  -f(0,2);
       f(3,0) =  -f(0,3);
       f(2,1) =  -f(1,2);
       f(3,1) =  -f(1,3);
       f(3,2) =  -f(2,3);
+       
    }
 }
 

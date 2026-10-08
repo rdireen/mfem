@@ -2168,7 +2168,7 @@ H1_FECollection::H1_FECollection(const int p, const int dim, const int btype,
              }
              else
              {
-                //H1_Elements[Geometry::PENTATOPE] = new H1_PentatopeElement(p, pt_type);
+                //H1_Elements[Geometry::PENTATOPE] = new H1_PentatopeElement(p, pt_type); // Old 4D implementation
                 H1_Elements[Geometry::PENTATOPE] = new H1_PentatopeElement_Barycentric(p, pt_type);
 
              }
@@ -2565,7 +2565,7 @@ L2_FECollection::L2_FECollection(const int p, const int dim, const int btype,
          }
          else
          {
-            //L2_Elements[Geometry::PENTATOPE] = new L2_PentatopeElement(p, btype);
+            //L2_Elements[Geometry::PENTATOPE] = new L2_PentatopeElement(p, btype); // Old 4D implementation 
             L2_Elements[Geometry::PENTATOPE] = new L2_PentatopeElement_MMCP(p, btype);
 
          }
@@ -2696,9 +2696,8 @@ RT_FECollection::RT_FECollection(const int order, const int dim,
    }
    else if (dim == 4)
    {
-      //RT_Elements[Geometry::PENTATOPE] = new RT_PentatopeElement(p);
+      //RT_Elements[Geometry::PENTATOPE] = new RT_PentatopeElement(p); // Old 4D implementation
       RT_Elements[Geometry::PENTATOPE] = new Hdiv_PentatopeElement(p);
-
       RT_dof[Geometry::PENTATOPE] = p*pp1*(p + 2)*(p + 3)/6;
 
       //TODO: tesseracts
@@ -2927,15 +2926,6 @@ void RT_FECollection::InitFaces(const int p, const int dim_,
                      TetDofOrd[m][o] = -1 - TetDofOrd[m][o];
                   }
                }
-//                        std::cout << "Matrix of Orientations" << std::endl;
-//                        for (int row = 0; row<24; row++)
-//                        {
-//                            for (int col=0; col<TetDof; col++)
-//                            {
-//                                std::cout << TetDofOrd[row][col] << ",";
-//                            }
-//                            std::cout << std::endl;
-//                        }
             }
          }
       }
@@ -3109,14 +3099,6 @@ SkwGrad_FECollection::SkwGrad_FECollection(const int p, const int dim,
          SegDofOrd[0][i] = i;
          SegDofOrd[1][i] = -1 - (pm1 - i);
       }
-       
-       std::cout << "Matrix of Orientations for edges" << std::endl;
-//       for (int row = 0; row<2; row++) {
-//           for (int col=0; col<2; col++) {
-//               std::cout << SegDofOrd[row][col] << ",";
-//           }
-//           std::cout << std::endl;
-//       }
    }
 
    if (dim >= 2)
@@ -3127,7 +3109,6 @@ SkwGrad_FECollection::SkwGrad_FECollection(const int p, const int dim,
 
       
       int TriDof = SkwGrad_dof[Geometry::TRIANGLE];
-      std::cout << "Number of Tri DOF SkwGrad = " << TriDof << std::endl;
       TriDofOrd[0] = (TriDof > 0) ? new int[6*TriDof] : nullptr;
       for (int i = 1; i < 6; i++)
       {
@@ -3166,15 +3147,6 @@ SkwGrad_FECollection::SkwGrad_FECollection(const int p, const int dim,
             TriDofOrd[5][k0+1] = k5 + 1;
          }
       }
-//       std::cout << "Matrix of Orientations" << std::endl;
-//       for (int row = 0; row<6; row++) 
-//       {
-//           for (int col=0; col<TriDof; col++) 
-//           {
-//               std::cout << TriDofOrd[row][col] << ",";
-//           }
-//           std::cout << std::endl;
-//       }
    }
 
    if (dim >= 3)
@@ -3186,7 +3158,6 @@ SkwGrad_FECollection::SkwGrad_FECollection(const int p, const int dim,
       SkwGrad_dof[Geometry::TETRAHEDRON] = p*pm1*pm2/2;
 
       int TetDof_SkwGrad = SkwGrad_dof[Geometry::TETRAHEDRON];
-      std::cout << "Number of Tet DOF SkwGrad = " << TetDof_SkwGrad << std::endl;
       TetDofOrd[0] = (TetDof_SkwGrad > 0) ? new int[24*TetDof_SkwGrad] : nullptr;
        for (int i = 1; i < 24; i++)
        {
@@ -3279,16 +3250,8 @@ SkwGrad_FECollection::SkwGrad_FECollection(const int p, const int dim,
              }
           }
        }
-//        std::cout << "Matrix of Orientations" << std::endl;
-//        for (int row = 0; row<24; row++)
-//        {
-//            for (int col=0; col<TetDof; col++)
-//            {
-//                std::cout << TetDofOrd_Helper[row][col] << ",";
-//            }
-//            std::cout << std::endl;
-//        }
-       for (int i=0; i<24; i++) 
+       
+       for (int i=0; i<24; i++)
        {
            for (int j=0; j<TetDof; j++)
            {
@@ -3299,21 +3262,12 @@ SkwGrad_FECollection::SkwGrad_FECollection(const int p, const int dim,
                TetDofOrd[i][(3*(j+1)-1)] = TransDof + 2;
            }
        }
-//       for (int row = 0; row<24; row++)
-//       {
-//           for (int col=0; col<TetDof_SkwGrad; col++)
-//           {
-//               std::cout << TetDofOrd[row][col] << ",";
-//           }
-//           std::cout << std::endl;
-//       }
        
    }
    if (dim == 4)
    {
        SkwGrad_Elements[Geometry::PENTATOPE] = new HSkwGrad_PentatopeElement(p);
-       //SkwGrad_dof[Geometry::PENTATOPE] = (1/6)*p*(p+2)*(p+3)*(p+4);
-       SkwGrad_dof[Geometry::PENTATOPE] = p*(p-1)*(p-2)*(p-3)/6; //p*(p+2)*(p+3)*(p+4)/6;
+       SkwGrad_dof[Geometry::PENTATOPE] = p*(p-1)*(p-2)*(p-3)/6;
    }
 }
 
@@ -3431,7 +3385,6 @@ HCurl_FECollection::HCurl_FECollection(const int p, const int dim,
 
       
       int TriDof = HCurl_dof[Geometry::TRIANGLE];
-      std::cout << "Number of Tri DOF SkwGrad = " << TriDof << std::endl;
       TriDofOrd[0] = (TriDof > 0) ? new int[6*TriDof] : nullptr;
       for (int i = 1; i < 6; i++)
       {
@@ -3453,15 +3406,6 @@ HCurl_FECollection::HCurl_FECollection(const int p, const int dim,
              TriDofOrd[5][o] = -1-(TriDof-((pp1-i)*(p-i))/2+j);  // (0,2,1)
           }
        }
-//       std::cout << "Tris Matrix of Orientations" << std::endl;
-//       for (int row = 0; row<6; row++)
-//       {
-//           for (int col=0; col<TriDof; col++)
-//           {
-//               std::cout << TriDofOrd[row][col] << ",";
-//           }
-//           std::cout << std::endl;
-//       }
    }
 
    if (dim >= 3)
@@ -3470,10 +3414,9 @@ HCurl_FECollection::HCurl_FECollection(const int p, const int dim,
       // TODO: cb_type and ob_type for tets
       HCurl_Elements[Geometry::TETRAHEDRON] = new RT_TetrahedronElement(p);
       int Num_dofs = p*pm1*pm2/2;
-      HCurl_dof[Geometry::TETRAHEDRON] = pm1*p*pp1/2;//p*pm1*pm2/2;
+      HCurl_dof[Geometry::TETRAHEDRON] = pm1*p*pp1/2;
 
       int TetDof_HCurl = HCurl_dof[Geometry::TETRAHEDRON];
-      //std::cout << "Number of Tet DOF SkwGrad = " << TetDof_SkwGrad << std::endl;
       TetDofOrd[0] = (TetDof_HCurl > 0) ? new int[24*TetDof_HCurl] : nullptr;
        for (int i = 1; i < 24; i++)
        {
@@ -3565,15 +3508,6 @@ HCurl_FECollection::HCurl_FECollection(const int p, const int dim,
              }
           }
        }
-//        std::cout << "Matrix of Orientations" << std::endl;
-//        for (int row = 0; row<24; row++)
-//        {
-//            for (int col=0; col<TetDof; col++)
-//            {
-//                std::cout << TetDofOrd_Helper[row][col] << ",";
-//            }
-//            std::cout << std::endl;
-//        }
        for (int i=0; i<24; i++)
        {
            if (i%2 == 0)
@@ -3596,38 +3530,18 @@ HCurl_FECollection::HCurl_FECollection(const int p, const int dim,
                {
                    int Dof_inx = TetDofOrd_Helper[i][j];
                    int TransDof = 3*Dof_inx;
-//                   TetDofOrd[i][(3*(j+1)-3)] = -1 - TransDof;
-//                   TetDofOrd[i][(3*(j+1)-2)] = -1 - (TransDof + 1);
-//                   TetDofOrd[i][(3*(j+1)-1)] = -1 - (TransDof + 2);
                    TetDofOrd[i][(3*(j+1)-3)] = TransDof;
                    TetDofOrd[i][(3*(j+1)-2)] = (TransDof + 1);
                    TetDofOrd[i][(3*(j+1)-1)] = (TransDof + 2);
                }
            }
        }
-       // Manuelly set TetDofOrd
-//       TetDofOrd[3][0] = -1;
-//       TetDofOrd[3][1] = -3;
-//       TetDofOrd[3][2] = -2;
-//
-
-
-//       std::cout << "Tet Matrix of Orientations" << std::endl;
-//       for (int row = 0; row<24; row++)
-//       {
-//           for (int col=0; col<TetDof_HCurl; col++)
-//           {
-//               std::cout << TetDofOrd[row][col] << ",";
-//           }
-//           std::cout << std::endl;
-//       }
-//       std::cout << "Done" << std::endl;
        
    }
    if (dim == 4)
    {
        HCurl_Elements[Geometry::PENTATOPE] = new HCurl_PentatopeElement(p);
-       HCurl_dof[Geometry::PENTATOPE] = (pm2*pm1*p*pp1)/4; // num of bubble dofs  // (pm2*pm1*p*pp1)/4
+       HCurl_dof[Geometry::PENTATOPE] = (pm2*pm1*p*pp1)/4;
    }
 }
 
@@ -3663,19 +3577,6 @@ const int *HCurl_FECollection::DofOrderForOrientation(Geometry::Type GeomType,
       return TetDofOrd[Or%24];
    }
    return NULL;
-    
-    // From Hard Code DivSkew
-//    static int ind_pos[] = { 0 };
-//    static int ind_neg[] = { -1 };
-//
-//    if (Or %2 == 0)
-//    {
-//       std::cout << 0 << std::endl;
-//       return ind_pos;
-//       
-//    }
-//    std::cout << -1 << std::endl;
-//    return ind_neg;
     
 }
 
@@ -3816,7 +3717,6 @@ ND_FECollection::ND_FECollection(const int p, const int dim,
       }
 
       int TriDof = ND_dof[Geometry::TRIANGLE];
-      std::cout << "Number of Tri DOF ND = " << TriDof << std::endl;
       TriDofOrd[0] = (TriDof > 0) ? new int[6*TriDof] : nullptr;
       for (int i = 1; i < 6; i++)
       {
@@ -3855,13 +3755,6 @@ ND_FECollection::ND_FECollection(const int p, const int dim,
             TriDofOrd[5][k0+1] = k5 + 1;
          }
       }
-       std::cout << "Matrix of Orientations" << std::endl;
-       for (int row = 0; row<6; row++) {
-           for (int col=0; col<TriDof; col++) {
-               std::cout << TriDofOrd[row][col] << ",";
-           }
-           std::cout << std::endl;
-       }
    }
 
    if (dim >= 3)

@@ -49,30 +49,24 @@ public:
     virtual void GetLocalInterpolation(ElementTransformation &Trans,
                                        DenseMatrix &I) const override
     {mfem_error("GetLocalInterpolaton error");}
-    //LocalInterpolation_RT(*this, nk, dof2nk, Trans, I); }
     virtual void GetLocalRestriction(ElementTransformation &Trans,
                                      DenseMatrix &R) const override
     {          mfem_error("GetLocalRestriction error");}
-    //LocalRestriction_RT(nk, dof2nk, Trans, R); }
     virtual void GetTransferMatrix(const FiniteElement &fe,
                                    ElementTransformation &Trans,
                                    DenseMatrix &I) const override
     {          mfem_error("GetTransferMatrix error");}
-    //LocalInterpolation_RT(CheckVectorFE(fe), nk, dof2nk, Trans, I); }
     const StatelessDofTransformation *GetDofTransformation() const override
     { return &doftrans; }
     using FiniteElement::Project;
     virtual void Project(VectorCoefficient &vc,
                          ElementTransformation &Trans, Vector &dofs) const override;
-    //{ mfem_error("Project error"); } //Project_RT(tk, dof2tk, vc, Trans, dofs); } // Changed form ND -> RT projection routine
     virtual void ProjectMatrixCoefficient(
                                           MatrixCoefficient &mc, ElementTransformation &T, Vector &dofs) const override
     {          mfem_error("ProjectMatrixCoefficient error");}
-    //ProjectMatrixCoefficient_RT(nk, dof2nk, mc, T, dofs); }
     virtual void Project(const FiniteElement &fe, ElementTransformation &Trans,
                          DenseMatrix &I) const override 
     {          mfem_error("Project error");}
-    //Project_RT(nk, dof2nk, fe, Trans, I); }
     virtual void ProjectDivSkew(const FiniteElement &fe,
                                 ElementTransformation &Trans,
                                 DenseMatrix &DivSkew);

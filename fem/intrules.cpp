@@ -1788,7 +1788,6 @@ IntegrationRule *IntegrationRules::TetrahedronIntegrationRule(int Order)
             
         case 10: // order 10 points 84
             ir = new IntegrationRule(84);
-            std::cout << "MMCP Tet Int Rule" << std::endl;
             ir->AddTetPoint( 0 , 0.0268784744148170 , 0.0268784744148170 , 0.0268784744148170 , 0.0021449351443160 );
             ir->AddTetPoint( 1 , 0.9193645767555489 , 0.0268784744148170 , 0.0268784744148170 , 0.0021449351443160 );
             ir->AddTetPoint( 2 , 0.0268784744148170 , 0.9193645767555489 , 0.0268784744148170 , 0.0021449351443160 );

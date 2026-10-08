@@ -88,9 +88,10 @@ int main(int argc, char *argv[])
       args.PrintUsage(cout);
       return 1;
    }
+    
    if (kappa < 0)
    {
-      kappa = 3*(order+1)*(order+2);
+      kappa = 50*(order+1)*(order+2);
    }
    args.PrintOptions(cout);
 
@@ -109,16 +110,12 @@ int main(int argc, char *argv[])
    //    'ref_levels' of uniform refinement. By default, or if ref_levels < 0,
    //    we choose it to be the largest number that gives a final mesh with no
    //    more than 50,000 elements.
+   
+   for (int l = 0; l < ref_levels; l++)
    {
-//      if (ref_levels < 0)
-//      {
-//         ref_levels = (int)floor(log(50000./mesh.GetNE())/log(2.)/dim);
-//      }
-      for (int l = 0; l < ref_levels; l++)
-      {
-         mesh.UniformRefinement();
-      }
+      mesh.UniformRefinement();
    }
+
    if (mesh.NURBSext)
    {
       mesh.SetCurvature(max(order, 1));
@@ -130,6 +127,15 @@ int main(int argc, char *argv[])
    DG_FECollection fec(order, dim);
    FiniteElementSpace fespace(&mesh, &fec);
    cout << "Number of unknowns: " << fespace.GetVSize() << endl;
+    
+    
+    Array<int> ess_tdof_list;
+    if (mesh.bdr_attributes.Size())
+    {
+        Array<int> ess_bdr(mesh.bdr_attributes.Max());
+        ess_bdr = 1;
+        fespace.GetEssentialTrueDofs(ess_bdr, ess_tdof_list);
+    }
 
    // 6. Set up the linear form b(.) which corresponds to the right-hand side of
    //    the FEM linear system.
@@ -185,40 +191,121 @@ int main(int argc, char *argv[])
    }
    if (pa) { a.SetAssemblyLevel(AssemblyLevel::PARTIAL); }
    a.Assemble();
-   a.Finalize();
+    
+    OperatorPtr A;
+    Vector B, X;
+    a.FormLinearSystem(ess_tdof_list, x, b, A, X, B); // x = x_ess + X
+    
+    
+    
+//    // 11. Solve the linear system A X = B.
+//    if (!pa)
+//    {
+// #ifndef MFEM_USE_SUITESPARSE
+//       // Use a simple symmetric Gauss-Seidel preconditioner with PCG.   MADE CHANGE HERE TO ITER #
+//       GSSmoother M((SparseMatrix&)(*A));
+//       PCG(*A, M, B, X, 1, 5000, 1e-12, 0.0);
+// #else
+//       // If MFEM was compiled with SuiteSparse, use UMFPACK to solve the system.
+//       UMFPackSolver umf_solver;
+//       umf_solver.Control[UMFPACK_ORDERING] = UMFPACK_ORDERING_METIS;
+//       umf_solver.SetOperator(*A);
+//       umf_solver.Mult(B, X);
+// #endif
+//    }
+//    else // Jacobi preconditioning in partial assembly mode
+//    {
+//        CG(*A, B, X, 1, 400, 1e-12, 0.0);
+//    }
+    
+    // 11. Solve the linear system A X = B.
+     if (!pa)
+     {
+         #ifndef MFEM_USE_SUITESPARSE
+         // Use GMRES with a Gauss-Seidel preconditioner
+         GSSmoother M((SparseMatrix&)(*A));  // Gauss-Seidel preconditioner
+         GMRESSolver gmres;                  // Create GMRES solver
+         gmres.SetKDim(9000);                 // Set the Krylov subspace dimension (restart size)
+         gmres.SetMaxIter(50000);              // Set maximum iterations
+         gmres.SetRelTol(1e-12);             // Set relative tolerance
+         gmres.SetPrintLevel(1);             // Print convergence information
+         gmres.SetPreconditioner(M);         // Set the preconditioner
+         gmres.SetOperator(*A);              // Set the operator
+         gmres.Mult(B, X);                   // Solve the system
+         #else
+         // If MFEM was compiled with SuiteSparse, use UMFPACK to solve the system.
+         UMFPackSolver umf_solver;
+         umf_solver.Control[UMFPACK_ORDERING] = UMFPACK_ORDERING_METIS;
+         umf_solver.SetOperator(*A);
+         umf_solver.Mult(B, X);
+         #endif
+     }
 
+         
+    
+    // 12. Recover the solution as a finite element grid function.
+    a.RecoverFEMSolution(X, b, x);
+    
+    
+   //a.Finalize();
    // 9. Define a simple symmetric Gauss-Seidel preconditioner and use it to
    //    solve the system Ax=b with PCG in the symmetric case, and GMRES in the
    //    non-symmetric one. (Note that tolerances are squared: 1e-12 corresponds
    //    to a relative tolerance of 1e-6).
    //
    //    If MFEM was compiled with SuiteSparse, use UMFPACK to solve the system.
-   if (pa)
-   {
-      MFEM_VERIFY(sigma == -1.0,
-                  "The case of PA with sigma != -1 is not yet supported.");
-      CG(a, b, x, 1, 500, 1e-12, 0.0);
-   }
-   else
-   {
-      const SparseMatrix &A = a.SpMat();
-#ifndef MFEM_USE_SUITESPARSE
-      GSSmoother M(A);
-      if (sigma == -1.0)
-      {
-         PCG(A, M, b, x, 1, 5000, 1e-12, 0.0);
-      }
-      else
-      {
-         GMRES(A, M, b, x, 1, 500, 10, 1e-12, 0.0);
-      }
-#else
-      UMFPackSolver umf_solver;
-      umf_solver.Control[UMFPACK_ORDERING] = UMFPACK_ORDERING_METIS;
-      umf_solver.SetOperator(A);
-      umf_solver.Mult(b, x);
-#endif
-   }
+//   if (pa)
+//   {
+//      MFEM_VERIFY(sigma == -1.0,
+//                  "The case of PA with sigma != -1 is not yet supported.");
+//      CG(a, b, x, 1, 500, 1e-12, 0.0);
+//   }
+//   else
+//   {
+//      const SparseMatrix &A = a.SpMat();
+//#ifndef MFEM_USE_SUITESPARSE
+//      GSSmoother M(A);
+//      if (sigma == -1.0)
+//      {
+//         PCG(A, M, b, x, 1, 5000, 1e-12, 0.0);
+//      }
+//      else
+//      {
+//         GMRES(A, M, b, x, 1, 500, 10, 1e-12, 0.0);
+//      }
+//#else
+//      UMFPackSolver umf_solver;
+//      umf_solver.Control[UMFPACK_ORDERING] = UMFPACK_ORDERING_METIS;
+//      umf_solver.SetOperator(A);
+//      umf_solver.Mult(b, x);
+//#endif
+//   }
+    
+//    // 11. Solve the linear system A X = B.
+//     if (!pa)
+//     {
+//         #ifndef MFEM_USE_SUITESPARSE
+//         // Use GMRES with a Gauss-Seidel preconditioner
+//         const SparseMatrix &A = a.SpMat();
+//         Vector B, X;
+//         GSSmoother M(A);  // Gauss-Seidel preconditioner
+//         GMRESSolver gmres;                  // Create GMRES solver
+//         gmres.SetKDim(200);                 // Set the Krylov subspace dimension (restart size)
+//         gmres.SetMaxIter(200);              // Set maximum iterations
+//         gmres.SetRelTol(1e-12);             // Set relative tolerance
+//         gmres.SetPrintLevel(1);             // Print convergence information
+//         gmres.SetPreconditioner(M);         // Set the preconditioner
+//         gmres.SetOperator(A);              // Set the operator
+//         gmres.Mult(B, X);                   // Solve the system
+//         #else
+//         // If MFEM was compiled with SuiteSparse, use UMFPACK to solve the system.
+//         UMFPackSolver umf_solver;
+//         umf_solver.Control[UMFPACK_ORDERING] = UMFPACK_ORDERING_METIS;
+//         umf_solver.SetOperator(*A);
+//         umf_solver.Mult(B, X);
+//         #endif
+//     }
+
     
     cout << "\n Initial || E_h - E ||_{L^2} = " << x.ComputeL2Error(E, irs) << '\n' << endl;
 
@@ -277,13 +364,10 @@ double f_exact(const Vector &x)
     if (dim == 2)
     {
         f_out = 2.0*(x(0)*(1. - x(0))+x(1)*(1. - x(1)));
-        //f_out = -1.0*(((2.+12.*x(0)*(x(0) - 1.))*x(1)*x(1)*(1.-x(1))*(1. - x(1)))  + ((2.+12.*x(1)*(x(1) - 1.))*x(0)*x(0)*(1. - x(0))*(1. - x(0))));
-
     }
     
     if (dim == 3)
     {
-        //f_out = 2.0*(x(0)*(1. - x(0)) + x(1)*(1. - x(1)) + x(2)*(1. - x(2)));
         f_out = 2.0*((x(1)*(1. - x(1))* x(2)*(1. - x(2))) + (x(0)*(1. - x(0))* x(2)*(1. - x(2))) + (x(0)*(1. - x(0))* x(1)*(1. - x(1))));
     }
     

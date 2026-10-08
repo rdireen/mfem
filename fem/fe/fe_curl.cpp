@@ -17,23 +17,12 @@ namespace mfem
 using namespace std;
 
 
-// Current
-//const double HCurl_PentatopeElement::tk1[10][4] =
-//{{1,0,0,0},{1,0,0,0},{1,0,0,0},{0,1,0,0},{0,1,0,0},{0,0,1,0},{-1,1,0,0},{-1,1,0,0},{-1,0,1,0},{0,-1,1,0}};
-//
-//const double HCurl_PentatopeElement::tk2[10][4] =
-//{{-1,1,0,0},{-1,0,1,0},{-1,0,0,1},{0,-1,1,0},{0,-1,0,1},{0,0,-1,1},{0,-1,1,0},{0,-1,0,1},{0,0,-1,1},{0,0,-1,1}};
-
-
-// New
 const double HCurl_PentatopeElement::tk1[10][4] =
 {{1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1},{-1,1,0,0},{-1,0,1,0},{0,-1,1,0},{-1,0,0,1},{-1,0,1,0},{0,0,-1,1}};
 
 const double HCurl_PentatopeElement::tk2[14][4] =
 {{-1,1,0,0},{-1,0,1,0},{-1,0,0,1},{0,-1,1,0},{0,-1,0,1},{0,0,-1,1},{0,-1,1,0},{0,-1,0,1},{0,0,-1,1},{0,0,-1,1},{1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1}};
 
-
-//const double HCurl_PentatopeElement::c = 1./5.;
 
 HCurl_PentatopeElement::HCurl_PentatopeElement(const int p)
 : VectorFiniteElement(4, Geometry::PENTATOPE, p*(p*p*p + 8*p*p + 19*p +12)/4,
@@ -50,11 +39,7 @@ dof2tk1(dof), dof2tk2(dof) , doftrans(p)
     // Lamda function for computing the scaled skew-symmetric-outer-product of two four vectors
     auto skw_sym_outerprod_fnc = [&](const std::vector<double>& vec1, const std::vector<double>& vec2)
     {
-
         DenseMatrix result(4,4);
-        double s_factor = 1.0;
-        //std::cout << "Skw-sym Prod" << std::endl;
-        // "Forward" Product
         for (int i = 0; i < vec1.size(); ++i)
         {
             for (int j = 0; j < vec2.size(); ++j)
@@ -66,12 +51,9 @@ dof2tk1(dof), dof2tk2(dof) , doftrans(p)
                 double outer_prod_2 = vec2[i] * vec1[j];
                 
                 // Compute Result
-                result(i,j) = s_factor*(outer_prod_1 - outer_prod_2);
-                //std::cout << 0.5*(outer_prod_1 - outer_prod_2) << std::endl;
+                result(i,j) = (outer_prod_1 - outer_prod_2);
             }
-            //std::cout << "New COl --------" << std::endl;
         }
-        
         return result;
     }; // end of lamda function
 
@@ -92,44 +74,28 @@ dof2tk1(dof), dof2tk2(dof) , doftrans(p)
     Vector shape_x(p), shape_y(p), shape_z(p), shape_t(p),
     shape_l(p);
 #endif
-    // edges (see Tetrahedron::edges in mesh/tetrahedron.cpp)
     int o = 0;
-    int test_order = p;
     // faces (see Mesh::GeneratePlanars in mesh/mesh.cpp)
     for (int j = 0; j < p; j++)
        for (int i=0; i + j < p; i++) // (0,1,2)
        {
           double w = fop[i] + fop[j] + fop[pm1-i-j];
-           double xcoord = fop[i]/w;
-           double ycoord = fop[j]/w;
-          //std::cout << xcoord << ", " << ycoord << " , 0.0, 0.0" << std::endl;
           Nodes.IntPoint(o).Set4(fop[i]/w, fop[j]/w, 0.0, 0.0);
           dof2tk1[o] = 0;
           dof2tk2[o++] = 0;
-          //std::cout << "inside dof" << std::endl;
        }
     for (int j = 0; j < p; j++)
        for (int i=0; i + j < p; i++) // (0,1,3)
        {
           double w = fop[i] + fop[j] + fop[pm1-i-j];
-           double xcoord = fop[i]/w;
-           double zcoord = fop[j]/w;
-           //std::cout << xcoord << " ,0.0, " << zcoord << " ,0.0" << std::endl;
-
           Nodes.IntPoint(o).Set4(fop[i]/w, 0.0, fop[j]/w, 0.0);
           dof2tk1[o] = 0;
           dof2tk2[o++] = 1;
-//           dof2tk1[o] = 10;
-//           dof2tk2[o++] = 5;
-
        }
     for (int j = 0; j < p; j++)
        for (int i=0; i + j < p; i++) // (0,1,4)
        {
           double w = fop[i] + fop[j] + fop[pm1-i-j];
-           double xcoord = fop[i]/w;
-           double tcoord = fop[j]/w;
-           //std::cout << xcoord << " ,0.0, 0.0 " << tcoord << std::endl;
           Nodes.IntPoint(o).Set4(fop[i]/w, 0.0, 0.0, fop[j]/w);
           dof2tk1[o] = 0;
           dof2tk2[o++] = 2;
@@ -139,9 +105,6 @@ dof2tk1(dof), dof2tk2(dof) , doftrans(p)
        for (int i=0; i + j < p; i++) // (0,2,3)
        {
           double w = fop[i] + fop[j] + fop[pm1-i-j];
-           double ycoord = fop[i]/w;
-           double zcoord = fop[j]/w;
-           //std::cout << "0.0, " <<  ycoord << ", " << zcoord << " ,0.0 " << std::endl;
           Nodes.IntPoint(o).Set4(0.0, fop[i]/w, fop[j]/w, 0.0);
           dof2tk1[o] = 1;
           dof2tk2[o++] = 3;
@@ -151,47 +114,30 @@ dof2tk1(dof), dof2tk2(dof) , doftrans(p)
        for (int i=0; i + j < p; i++) // (0,2,4)
        {
           double w = fop[i] + fop[j] + fop[pm1-i-j];
-           double ycoord = fop[i]/w;
-           double tcoord = fop[j]/w;
-           //std::cout << "0.0, " << ycoord << " ,0.0, " << tcoord << std::endl;
           Nodes.IntPoint(o).Set4(0.0, fop[i]/w, 0.0, fop[j]/w);
           dof2tk1[o] = 1;
           dof2tk2[o++] = 4;
-
        }
     for (int j = 0; j < p; j++)
        for (int i=0; i + j < p; i++) // (0,3,4)
        {
           double w = fop[i] + fop[j] + fop[pm1-i-j];
-           double zcoord = fop[i]/w;
-           double tcoord = fop[j]/w;
-           //std::cout << "0.0, 0.0, " << zcoord << ", " << tcoord << std::endl;
           Nodes.IntPoint(o).Set4(0.0, 0.0, fop[i]/w, fop[j]/w);
           dof2tk1[o] = 2;
           dof2tk2[o++] = 5;
-
        }
     for (int j = 0; j < p; j++)
        for (int i=0; i + j < p; i++) // (1,2,3)
        {
           double w = fop[i] + fop[j] + fop[pm1-i-j];
-           double ycoord = fop[i]/w;
-           double xcoord = fop[pm1-i-j]/w;
-           double zcoord = fop[j]/w;
-           //std::cout << xcoord << ", " << ycoord << ", " << zcoord << ", 0.0" << std::endl;
           Nodes.IntPoint(o).Set4(fop[pm1-i-j]/w, fop[i]/w, fop[j]/w, 0.0);
           dof2tk1[o] = 4;
           dof2tk2[o++] = 6;
-
        }
     for (int j = 0; j < p; j++)
        for (int i=0; i + j < p; i++) // (1,2,4)
        {
           double w = fop[i] + fop[j] + fop[pm1-i-j];
-           double ycoord = fop[i]/w;
-           double xcoord = fop[pm1-i-j]/w;
-           double tcoord = fop[j]/w;
-           //std::cout << xcoord << ", " << ycoord << " ,0.0, " << tcoord << std::endl;
           Nodes.IntPoint(o).Set4(fop[pm1-i-j]/w, fop[i]/w, 0.0, fop[j]/w);
           dof2tk1[o] = 4;
           dof2tk2[o++] = 7;
@@ -201,10 +147,6 @@ dof2tk1(dof), dof2tk2(dof) , doftrans(p)
        for (int i=0; i + j < p; i++) // (1,3,4)
        {
           double w = fop[i] + fop[j] + fop[pm1-i-j];
-           double zcoord = fop[i]/w;
-           double xcoord = fop[pm1-i-j]/w;
-           double tcoord = fop[j]/w;
-           //std::cout << xcoord << ", 0.0, " << zcoord << ", " << tcoord << std::endl;
           Nodes.IntPoint(o).Set4(fop[pm1-i-j]/w, 0.0, fop[i]/w, fop[j]/w);
           dof2tk1[o] = 5;
           dof2tk2[o++] = 8;
@@ -214,16 +156,9 @@ dof2tk1(dof), dof2tk2(dof) , doftrans(p)
        for (int i=0; i + j < p; i++) // (2,3,4)
        {
           double w = fop[i] + fop[j] + fop[pm1-i-j];
-           double zcoord = fop[i]/w;
-           double ycoord = fop[pm1-i-j]/w;
-           double tcoord = fop[j]/w;
-           //std::cout << "0.0, " << ycoord << ", " << zcoord << ", " << tcoord << std::endl;
           Nodes.IntPoint(o).Set4(0.0, fop[pm1-i-j]/w, fop[i]/w, fop[j]/w);
-           //const IntegrationPoint &ip = Nodes.IntPoint(o);
-           //std::cout << "Dof 1  = " << ip.x << ", " << ip.y << ", " << ip.z << ", " << ip.t << std::endl;
           dof2tk1[o] = 6;
           dof2tk2[o++] = 9;
-
        }
     
     // facets (see Mesh::GenerateFaces in mesh/mesh.cpp)
@@ -235,7 +170,6 @@ dof2tk1(dof), dof2tk2(dof) , doftrans(p)
              double w = ftop[i] + ftop[j] + ftop[k] + ftop[pm2-i-j-k];
              Nodes.IntPoint(o).Set4(ftop[i]/w, ftop[j]/w, ftop[k]/w, 0.0);
              const IntegrationPoint &ip = Nodes.IntPoint(o);
-             //std::cout << "Dof 1  = " << ip.x << ", " << ip.y << ", " << ip.z << ", " << ip.t << std::endl;
              dof2tk1[o] = 1;
              dof2tk2[o++] = 10;
              Nodes.IntPoint(o).Set4(ftop[i]/w, ftop[j]/w, ftop[k]/w, 0.0);
@@ -252,7 +186,6 @@ dof2tk1(dof), dof2tk2(dof) , doftrans(p)
              double w = ftop[i] + ftop[j] + ftop[k] + ftop[pm2-i-j-k];
              Nodes.IntPoint(o).Set4(ftop[j]/w, ftop[i]/w, 0.0, ftop[k]/w);
               const IntegrationPoint &ip = Nodes.IntPoint(o);
-              //std::cout << "Dof 2  = " << ip.x << ", " << ip.y << ", " << ip.z << ", " << ip.t << std::endl;
              dof2tk1[o] = 0;
              dof2tk2[o++] = 11;
              Nodes.IntPoint(o).Set4(ftop[j]/w, ftop[i]/w, 0.0, ftop[k]/w);
@@ -269,7 +202,6 @@ dof2tk1(dof), dof2tk2(dof) , doftrans(p)
              double w = ftop[i] + ftop[j] + ftop[k] + ftop[pm2-i-j-k];
              Nodes.IntPoint(o).Set4(ftop[i]/w, 0.0, ftop[j]/w, ftop[k]/w);
               const IntegrationPoint &ip = Nodes.IntPoint(o);
-              //std::cout << "Dof 3  = " << ip.x << ", " << ip.y << ", " << ip.z << ", " << ip.t << std::endl;
              dof2tk1[o] = 2;
              dof2tk2[o++] = 10;
              Nodes.IntPoint(o).Set4(ftop[i]/w, 0.0, ftop[j]/w, ftop[k]/w);
@@ -286,7 +218,6 @@ dof2tk1(dof), dof2tk2(dof) , doftrans(p)
              double w = ftop[i] + ftop[j] + ftop[k] + ftop[pm2-i-j-k];
              Nodes.IntPoint(o).Set4(0.0, ftop[j]/w, ftop[i]/w, ftop[k]/w);
               const IntegrationPoint &ip = Nodes.IntPoint(o);
-              //std::cout << "Dof 4  = " << ip.x << ", " << ip.y << ", " << ip.z << ", " << ip.t << std::endl;
              dof2tk1[o] = 1;
              dof2tk2[o++] = 12;
              Nodes.IntPoint(o).Set4(0.0, ftop[j]/w, ftop[i]/w, ftop[k]/w);
@@ -305,7 +236,6 @@ dof2tk1(dof), dof2tk2(dof) , doftrans(p)
              double w = ftop[i] + ftop[j] + ftop[k] + ftop[pm2-i-j-k];
              Nodes.IntPoint(o).Set4(ftop[pm2-i-j-k]/w, ftop[i]/w, ftop[j]/w, ftop[k]/w);
               const IntegrationPoint &ip = Nodes.IntPoint(o);
-              //std::cout << "Dof 5  = " << ip.x << ", " << ip.y << ", " << ip.z << ", " << ip.t << std::endl;
              dof2tk1[o] = 5;
              dof2tk2[o++] = 0;
              Nodes.IntPoint(o).Set4(ftop[pm2-i-j-k]/w, ftop[i]/w, ftop[j]/w, ftop[k]/w);
@@ -355,10 +285,7 @@ dof2tk1(dof), dof2tk2(dof) , doftrans(p)
         }
     }
 
-//    std::ofstream T_file("T_4DCurl.txt");
-//    T.PrintMatlab(T_file);
     DenseMatrix B(4, 4);
-    //std::vector<DenseMatrix> Mat_B(dof);
     int num_dof = dof;
 
     double Tensor_B[4][4][num_dof];
@@ -370,22 +297,12 @@ dof2tk1(dof), dof2tk2(dof) , doftrans(p)
     {
         
         const IntegrationPoint &ip = Nodes.IntPoint(q);
-        //std::cout << "Dof " << q << " = " << ip.x << ", " << ip.y << ", " << ip.z << ", " << ip.t << "----------------------" << std::endl;
         
-        //const double *nm = nk + 4*dof2nk[m];
-        // TOP OF DOF
         const double tm1[4] = {tk1[dof2tk1[q]][0], tk1[dof2tk1[q]][1], tk1[dof2tk1[q]][2], tk1[dof2tk1[q]][3]};
         
         const double tm2[4] = {tk2[dof2tk2[q]][0], tk2[dof2tk2[q]][1], tk2[dof2tk2[q]][2], tk2[dof2tk2[q]][3]};
-        
-        //        const double tm1[4] = {tk1[dof2tk[q]][0], tk1[dof2tk[q]][1], tk1[dof2tk[q]][2], tk1[dof2tk[q]][3]};
-        //
-        //        const double tm2[4] = {tk2[dof2tk[q]][0], tk2[dof2tk[q]][1], tk2[dof2tk[q]][2], tk2[dof2tk[q]][3]};
-        
-        //const Vector tm({tk[4*dof2tk[q]], tk[4*dof2tk[q]+1], tk[4*dof2tk[q]+2], tk[4*dof2tk[q]+3]});
-        //std::cout << "tm < " << tm(0) << "," << tm(1) << "," << tm(2) << "," << tm(3) << ">" <<std::endl;
+                
         int o = 0;
-        //int num_dof = dof;
         
         //compute barycentric coordinates as function of ip
         std::vector<double> bary_vector{ip.x, ip.y, ip.z, ip.t, (1.0 - ip.x - ip.y - ip.z - ip.t)};
@@ -403,22 +320,7 @@ dof2tk1(dof), dof2tk2(dof) , doftrans(p)
         
         std::vector<double> grad_La, grad_Lb, grad_Lc, grad_Ld, grad_Le;
         
-        double sf = 0.5;
-        
-        
-       // Faces
-//        for(int i=0; i<p;i++)
-//        {
-//            for(int j=0; j<p;j++)
-//            {
-//                for(int a=0; a<5;a++)
-//                {
-//                    for(int b=0; b<5;b++)
-//                    {
-//                        for(int c=0; c<5;c++)
-//                        {
-//                            if((a<b)&&(b<c)&&((i+j)<p))
-//                            {
+        // Faces
         for(int a=0; a<5;a++)
         {
             for(int b=0; b<5;b++)
@@ -460,27 +362,27 @@ dof2tk1(dof), dof2tk2(dof) , doftrans(p)
                                 DenseMatrix skw_sym_outerprod_3 = skw_sym_outerprod_fnc(grad_La, grad_Lb);
                                 
                                 // Add Basis Funcitons
-                                Tensor_B[0][0][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * (La*skw_sym_outerprod_1(0,0) + Lb*skw_sym_outerprod_2(0,0) + Lc*skw_sym_outerprod_3(0,0));
-                                Tensor_B[0][1][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * (La*skw_sym_outerprod_1(0,1) + Lb*skw_sym_outerprod_2(0,1) + Lc*skw_sym_outerprod_3(0,1));
-                                Tensor_B[0][2][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * (La*skw_sym_outerprod_1(0,2) + Lb*skw_sym_outerprod_2(0,2) + Lc*skw_sym_outerprod_3(0,2));
-                                Tensor_B[0][3][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * (La*skw_sym_outerprod_1(0,3) + Lb*skw_sym_outerprod_2(0,3) + Lc*skw_sym_outerprod_3(0,3));
+                                Tensor_B[0][0][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * (La*skw_sym_outerprod_1(0,0) + Lb*skw_sym_outerprod_2(0,0) + Lc*skw_sym_outerprod_3(0,0));
+                                Tensor_B[0][1][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * (La*skw_sym_outerprod_1(0,1) + Lb*skw_sym_outerprod_2(0,1) + Lc*skw_sym_outerprod_3(0,1));
+                                Tensor_B[0][2][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * (La*skw_sym_outerprod_1(0,2) + Lb*skw_sym_outerprod_2(0,2) + Lc*skw_sym_outerprod_3(0,2));
+                                Tensor_B[0][3][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * (La*skw_sym_outerprod_1(0,3) + Lb*skw_sym_outerprod_2(0,3) + Lc*skw_sym_outerprod_3(0,3));
                                 
                                 
-                                Tensor_B[1][0][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * (La*skw_sym_outerprod_1(1,0) + Lb*skw_sym_outerprod_2(1,0) + Lc*skw_sym_outerprod_3(1,0));
-                                Tensor_B[1][1][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * (La*skw_sym_outerprod_1(1,1) + Lb*skw_sym_outerprod_2(1,1) + Lc*skw_sym_outerprod_3(1,1));
-                                Tensor_B[1][2][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * (La*skw_sym_outerprod_1(1,2) + Lb*skw_sym_outerprod_2(1,2) + Lc*skw_sym_outerprod_3(1,2));
-                                Tensor_B[1][3][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * (La*skw_sym_outerprod_1(1,3) + Lb*skw_sym_outerprod_2(1,3) + Lc*skw_sym_outerprod_3(1,3));
+                                Tensor_B[1][0][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * (La*skw_sym_outerprod_1(1,0) + Lb*skw_sym_outerprod_2(1,0) + Lc*skw_sym_outerprod_3(1,0));
+                                Tensor_B[1][1][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * (La*skw_sym_outerprod_1(1,1) + Lb*skw_sym_outerprod_2(1,1) + Lc*skw_sym_outerprod_3(1,1));
+                                Tensor_B[1][2][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * (La*skw_sym_outerprod_1(1,2) + Lb*skw_sym_outerprod_2(1,2) + Lc*skw_sym_outerprod_3(1,2));
+                                Tensor_B[1][3][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * (La*skw_sym_outerprod_1(1,3) + Lb*skw_sym_outerprod_2(1,3) + Lc*skw_sym_outerprod_3(1,3));
                                 
                                 
-                                Tensor_B[2][0][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * (La*skw_sym_outerprod_1(2,0) + Lb*skw_sym_outerprod_2(2,0) + Lc*skw_sym_outerprod_3(2,0));
-                                Tensor_B[2][1][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * (La*skw_sym_outerprod_1(2,1) + Lb*skw_sym_outerprod_2(2,1) + Lc*skw_sym_outerprod_3(2,1));
-                                Tensor_B[2][2][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * (La*skw_sym_outerprod_1(2,2) + Lb*skw_sym_outerprod_2(2,2) + Lc*skw_sym_outerprod_3(2,2));
-                                Tensor_B[2][3][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * (La*skw_sym_outerprod_1(2,3) + Lb*skw_sym_outerprod_2(2,3) + Lc*skw_sym_outerprod_3(2,3));
+                                Tensor_B[2][0][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * (La*skw_sym_outerprod_1(2,0) + Lb*skw_sym_outerprod_2(2,0) + Lc*skw_sym_outerprod_3(2,0));
+                                Tensor_B[2][1][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * (La*skw_sym_outerprod_1(2,1) + Lb*skw_sym_outerprod_2(2,1) + Lc*skw_sym_outerprod_3(2,1));
+                                Tensor_B[2][2][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * (La*skw_sym_outerprod_1(2,2) + Lb*skw_sym_outerprod_2(2,2) + Lc*skw_sym_outerprod_3(2,2));
+                                Tensor_B[2][3][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * (La*skw_sym_outerprod_1(2,3) + Lb*skw_sym_outerprod_2(2,3) + Lc*skw_sym_outerprod_3(2,3));
                                 
-                                Tensor_B[3][0][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * (La*skw_sym_outerprod_1(3,0) + Lb*skw_sym_outerprod_2(3,0) + Lc*skw_sym_outerprod_3(3,0));
-                                Tensor_B[3][1][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * (La*skw_sym_outerprod_1(3,1) + Lb*skw_sym_outerprod_2(3,1) + Lc*skw_sym_outerprod_3(3,1));
-                                Tensor_B[3][2][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * (La*skw_sym_outerprod_1(3,2) + Lb*skw_sym_outerprod_2(3,2) + Lc*skw_sym_outerprod_3(3,2));
-                                Tensor_B[3][3][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * (La*skw_sym_outerprod_1(3,3) + Lb*skw_sym_outerprod_2(3,3) + Lc*skw_sym_outerprod_3(3,3));
+                                Tensor_B[3][0][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * (La*skw_sym_outerprod_1(3,0) + Lb*skw_sym_outerprod_2(3,0) + Lc*skw_sym_outerprod_3(3,0));
+                                Tensor_B[3][1][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * (La*skw_sym_outerprod_1(3,1) + Lb*skw_sym_outerprod_2(3,1) + Lc*skw_sym_outerprod_3(3,1));
+                                Tensor_B[3][2][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * (La*skw_sym_outerprod_1(3,2) + Lb*skw_sym_outerprod_2(3,2) + Lc*skw_sym_outerprod_3(3,2));
+                                Tensor_B[3][3][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * (La*skw_sym_outerprod_1(3,3) + Lb*skw_sym_outerprod_2(3,3) + Lc*skw_sym_outerprod_3(3,3));
                                 
                                 
                                 o++;
@@ -565,7 +467,6 @@ dof2tk1(dof), dof2tk2(dof) , doftrans(p)
                         
                         if((i+j+l)<p)
                         {
-                            //num_facesH++;
                             
                             int Family = 1;
                             
@@ -614,28 +515,28 @@ dof2tk1(dof), dof2tk2(dof) , doftrans(p)
                                 
                                 
                                 // Add Basis Funcitons
-                                Tensor_B[0][0][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(0,0) + Lb*skw_sym_outerprod_2(0,0) + Lc*skw_sym_outerprod_3(0,0));
-                                Tensor_B[0][1][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(0,1) + Lb*skw_sym_outerprod_2(0,1) + Lc*skw_sym_outerprod_3(0,1));
-                                Tensor_B[0][2][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(0,2) + Lb*skw_sym_outerprod_2(0,2) + Lc*skw_sym_outerprod_3(0,2));
-                                Tensor_B[0][3][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(0,3) + Lb*skw_sym_outerprod_2(0,3) + Lc*skw_sym_outerprod_3(0,3));
+                                Tensor_B[0][0][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(0,0) + Lb*skw_sym_outerprod_2(0,0) + Lc*skw_sym_outerprod_3(0,0));
+                                Tensor_B[0][1][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(0,1) + Lb*skw_sym_outerprod_2(0,1) + Lc*skw_sym_outerprod_3(0,1));
+                                Tensor_B[0][2][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(0,2) + Lb*skw_sym_outerprod_2(0,2) + Lc*skw_sym_outerprod_3(0,2));
+                                Tensor_B[0][3][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(0,3) + Lb*skw_sym_outerprod_2(0,3) + Lc*skw_sym_outerprod_3(0,3));
                                 
                                 
-                                Tensor_B[1][0][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(1,0) + Lb*skw_sym_outerprod_2(1,0) + Lc*skw_sym_outerprod_3(1,0));
-                                Tensor_B[1][1][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(1,1) + Lb*skw_sym_outerprod_2(1,1) + Lc*skw_sym_outerprod_3(1,1));
-                                Tensor_B[1][2][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(1,2) + Lb*skw_sym_outerprod_2(1,2) + Lc*skw_sym_outerprod_3(1,2));
-                                Tensor_B[1][3][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(1,3) + Lb*skw_sym_outerprod_2(1,3) + Lc*skw_sym_outerprod_3(1,3));
+                                Tensor_B[1][0][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(1,0) + Lb*skw_sym_outerprod_2(1,0) + Lc*skw_sym_outerprod_3(1,0));
+                                Tensor_B[1][1][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(1,1) + Lb*skw_sym_outerprod_2(1,1) + Lc*skw_sym_outerprod_3(1,1));
+                                Tensor_B[1][2][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(1,2) + Lb*skw_sym_outerprod_2(1,2) + Lc*skw_sym_outerprod_3(1,2));
+                                Tensor_B[1][3][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(1,3) + Lb*skw_sym_outerprod_2(1,3) + Lc*skw_sym_outerprod_3(1,3));
                                 
                                 
-                                Tensor_B[2][0][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(2,0) + Lb*skw_sym_outerprod_2(2,0) + Lc*skw_sym_outerprod_3(2,0));
-                                Tensor_B[2][1][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(2,1) + Lb*skw_sym_outerprod_2(2,1) + Lc*skw_sym_outerprod_3(2,1));
-                                Tensor_B[2][2][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1]* (La*skw_sym_outerprod_1(2,2) + Lb*skw_sym_outerprod_2(2,2) + Lc*skw_sym_outerprod_3(2,2));
-                                Tensor_B[2][3][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1]* (La*skw_sym_outerprod_1(2,3) + Lb*skw_sym_outerprod_2(2,3) + Lc*skw_sym_outerprod_3(2,3));
+                                Tensor_B[2][0][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(2,0) + Lb*skw_sym_outerprod_2(2,0) + Lc*skw_sym_outerprod_3(2,0));
+                                Tensor_B[2][1][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(2,1) + Lb*skw_sym_outerprod_2(2,1) + Lc*skw_sym_outerprod_3(2,1));
+                                Tensor_B[2][2][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1]* (La*skw_sym_outerprod_1(2,2) + Lb*skw_sym_outerprod_2(2,2) + Lc*skw_sym_outerprod_3(2,2));
+                                Tensor_B[2][3][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1]* (La*skw_sym_outerprod_1(2,3) + Lb*skw_sym_outerprod_2(2,3) + Lc*skw_sym_outerprod_3(2,3));
                                 
                                 
-                                Tensor_B[3][0][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(3,0) + Lb*skw_sym_outerprod_2(3,0) + Lc*skw_sym_outerprod_3(3,0));
-                                Tensor_B[3][1][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(3,1) + Lb*skw_sym_outerprod_2(3,1) + Lc*skw_sym_outerprod_3(3,1));
-                                Tensor_B[3][2][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(3,2) + Lb*skw_sym_outerprod_2(3,2) + Lc*skw_sym_outerprod_3(3,2));
-                                Tensor_B[3][3][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(3,3) + Lb*skw_sym_outerprod_2(3,3) + Lc*skw_sym_outerprod_3(3,3));
+                                Tensor_B[3][0][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(3,0) + Lb*skw_sym_outerprod_2(3,0) + Lc*skw_sym_outerprod_3(3,0));
+                                Tensor_B[3][1][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(3,1) + Lb*skw_sym_outerprod_2(3,1) + Lc*skw_sym_outerprod_3(3,1));
+                                Tensor_B[3][2][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(3,2) + Lb*skw_sym_outerprod_2(3,2) + Lc*skw_sym_outerprod_3(3,2));
+                                Tensor_B[3][3][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(3,3) + Lb*skw_sym_outerprod_2(3,3) + Lc*skw_sym_outerprod_3(3,3));
                             
                                 o++;
                             }
@@ -687,28 +588,28 @@ dof2tk1(dof), dof2tk2(dof) , doftrans(p)
                                 
                                 
                                 // Add Basis Funcitons
-                                Tensor_B[0][0][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(0,0) + Lb*skw_sym_outerprod_2(0,0) + Lc*skw_sym_outerprod_3(0,0));
-                                Tensor_B[0][1][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(0,1) + Lb*skw_sym_outerprod_2(0,1) + Lc*skw_sym_outerprod_3(0,1));
-                                Tensor_B[0][2][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(0,2) + Lb*skw_sym_outerprod_2(0,2) + Lc*skw_sym_outerprod_3(0,2));
-                                Tensor_B[0][3][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(0,3) + Lb*skw_sym_outerprod_2(0,3) + Lc*skw_sym_outerprod_3(0,3));
+                                Tensor_B[0][0][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(0,0) + Lb*skw_sym_outerprod_2(0,0) + Lc*skw_sym_outerprod_3(0,0));
+                                Tensor_B[0][1][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(0,1) + Lb*skw_sym_outerprod_2(0,1) + Lc*skw_sym_outerprod_3(0,1));
+                                Tensor_B[0][2][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(0,2) + Lb*skw_sym_outerprod_2(0,2) + Lc*skw_sym_outerprod_3(0,2));
+                                Tensor_B[0][3][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(0,3) + Lb*skw_sym_outerprod_2(0,3) + Lc*skw_sym_outerprod_3(0,3));
                                 
                                 
-                                Tensor_B[1][0][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(1,0) + Lb*skw_sym_outerprod_2(1,0) + Lc*skw_sym_outerprod_3(1,0));
-                                Tensor_B[1][1][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(1,1) + Lb*skw_sym_outerprod_2(1,1) + Lc*skw_sym_outerprod_3(1,1));
-                                Tensor_B[1][2][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(1,2) + Lb*skw_sym_outerprod_2(1,2) + Lc*skw_sym_outerprod_3(1,2));
-                                Tensor_B[1][3][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(1,3) + Lb*skw_sym_outerprod_2(1,3) + Lc*skw_sym_outerprod_3(1,3));
+                                Tensor_B[1][0][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(1,0) + Lb*skw_sym_outerprod_2(1,0) + Lc*skw_sym_outerprod_3(1,0));
+                                Tensor_B[1][1][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(1,1) + Lb*skw_sym_outerprod_2(1,1) + Lc*skw_sym_outerprod_3(1,1));
+                                Tensor_B[1][2][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(1,2) + Lb*skw_sym_outerprod_2(1,2) + Lc*skw_sym_outerprod_3(1,2));
+                                Tensor_B[1][3][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(1,3) + Lb*skw_sym_outerprod_2(1,3) + Lc*skw_sym_outerprod_3(1,3));
                                 
                                 
-                                Tensor_B[2][0][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(2,0) + Lb*skw_sym_outerprod_2(2,0) + Lc*skw_sym_outerprod_3(2,0));
-                                Tensor_B[2][1][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(2,1) + Lb*skw_sym_outerprod_2(2,1) + Lc*skw_sym_outerprod_3(2,1));
-                                Tensor_B[2][2][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1]* (La*skw_sym_outerprod_1(2,2) + Lb*skw_sym_outerprod_2(2,2) + Lc*skw_sym_outerprod_3(2,2));
-                                Tensor_B[2][3][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1]* (La*skw_sym_outerprod_1(2,3) + Lb*skw_sym_outerprod_2(2,3) + Lc*skw_sym_outerprod_3(2,3));
+                                Tensor_B[2][0][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(2,0) + Lb*skw_sym_outerprod_2(2,0) + Lc*skw_sym_outerprod_3(2,0));
+                                Tensor_B[2][1][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(2,1) + Lb*skw_sym_outerprod_2(2,1) + Lc*skw_sym_outerprod_3(2,1));
+                                Tensor_B[2][2][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1]* (La*skw_sym_outerprod_1(2,2) + Lb*skw_sym_outerprod_2(2,2) + Lc*skw_sym_outerprod_3(2,2));
+                                Tensor_B[2][3][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1]* (La*skw_sym_outerprod_1(2,3) + Lb*skw_sym_outerprod_2(2,3) + Lc*skw_sym_outerprod_3(2,3));
                                 
                                 
-                                Tensor_B[3][0][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(3,0) + Lb*skw_sym_outerprod_2(3,0) + Lc*skw_sym_outerprod_3(3,0));
-                                Tensor_B[3][1][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(3,1) + Lb*skw_sym_outerprod_2(3,1) + Lc*skw_sym_outerprod_3(3,1));
-                                Tensor_B[3][2][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(3,2) + Lb*skw_sym_outerprod_2(3,2) + Lc*skw_sym_outerprod_3(3,2));
-                                Tensor_B[3][3][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(3,3) + Lb*skw_sym_outerprod_2(3,3) + Lc*skw_sym_outerprod_3(3,3));
+                                Tensor_B[3][0][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(3,0) + Lb*skw_sym_outerprod_2(3,0) + Lc*skw_sym_outerprod_3(3,0));
+                                Tensor_B[3][1][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(3,1) + Lb*skw_sym_outerprod_2(3,1) + Lc*skw_sym_outerprod_3(3,1));
+                                Tensor_B[3][2][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(3,2) + Lb*skw_sym_outerprod_2(3,2) + Lc*skw_sym_outerprod_3(3,2));
+                                Tensor_B[3][3][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(3,3) + Lb*skw_sym_outerprod_2(3,3) + Lc*skw_sym_outerprod_3(3,3));
                         
                                 
                                 o++;
@@ -752,41 +653,35 @@ dof2tk1(dof), dof2tk2(dof) , doftrans(p)
                                 y = La + Lb + Lc + Ld;
                                 alpha = 2*(i +j +1);
                                 poly1d.CalcIntJacobi(l, x, y, alpha, Int_Jacobi_l);
-                                
-                                
-                                
+ 
                                 // Scaled Skew-sym outer product
                                 DenseMatrix skw_sym_outerprod_1 = skw_sym_outerprod_fnc(grad_Lb, grad_Lc);
                                 DenseMatrix skw_sym_outerprod_2 = skw_sym_outerprod_fnc(grad_Lc, grad_La);
                                 DenseMatrix skw_sym_outerprod_3 = skw_sym_outerprod_fnc(grad_La, grad_Lb);
-                                
-                                
-                                
-                                
-                                
+
                                 // Add Basis Funcitons
-                                Tensor_B[0][0][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(0,0) + Lb*skw_sym_outerprod_2(0,0) + Lc*skw_sym_outerprod_3(0,0));
-                                Tensor_B[0][1][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(0,1) + Lb*skw_sym_outerprod_2(0,1) + Lc*skw_sym_outerprod_3(0,1));
-                                Tensor_B[0][2][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(0,2) + Lb*skw_sym_outerprod_2(0,2) + Lc*skw_sym_outerprod_3(0,2));
-                                Tensor_B[0][3][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(0,3) + Lb*skw_sym_outerprod_2(0,3) + Lc*skw_sym_outerprod_3(0,3));
+                                Tensor_B[0][0][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(0,0) + Lb*skw_sym_outerprod_2(0,0) + Lc*skw_sym_outerprod_3(0,0));
+                                Tensor_B[0][1][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(0,1) + Lb*skw_sym_outerprod_2(0,1) + Lc*skw_sym_outerprod_3(0,1));
+                                Tensor_B[0][2][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(0,2) + Lb*skw_sym_outerprod_2(0,2) + Lc*skw_sym_outerprod_3(0,2));
+                                Tensor_B[0][3][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(0,3) + Lb*skw_sym_outerprod_2(0,3) + Lc*skw_sym_outerprod_3(0,3));
                                 
                                 
-                                Tensor_B[1][0][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(1,0) + Lb*skw_sym_outerprod_2(1,0) + Lc*skw_sym_outerprod_3(1,0));
-                                Tensor_B[1][1][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(1,1) + Lb*skw_sym_outerprod_2(1,1) + Lc*skw_sym_outerprod_3(1,1));
-                                Tensor_B[1][2][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(1,2) + Lb*skw_sym_outerprod_2(1,2) + Lc*skw_sym_outerprod_3(1,2));
-                                Tensor_B[1][3][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(1,3) + Lb*skw_sym_outerprod_2(1,3) + Lc*skw_sym_outerprod_3(1,3));
+                                Tensor_B[1][0][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(1,0) + Lb*skw_sym_outerprod_2(1,0) + Lc*skw_sym_outerprod_3(1,0));
+                                Tensor_B[1][1][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(1,1) + Lb*skw_sym_outerprod_2(1,1) + Lc*skw_sym_outerprod_3(1,1));
+                                Tensor_B[1][2][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(1,2) + Lb*skw_sym_outerprod_2(1,2) + Lc*skw_sym_outerprod_3(1,2));
+                                Tensor_B[1][3][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(1,3) + Lb*skw_sym_outerprod_2(1,3) + Lc*skw_sym_outerprod_3(1,3));
                                 
                                 
-                                Tensor_B[2][0][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(2,0) + Lb*skw_sym_outerprod_2(2,0) + Lc*skw_sym_outerprod_3(2,0));
-                                Tensor_B[2][1][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(2,1) + Lb*skw_sym_outerprod_2(2,1) + Lc*skw_sym_outerprod_3(2,1));
-                                Tensor_B[2][2][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1]* (La*skw_sym_outerprod_1(2,2) + Lb*skw_sym_outerprod_2(2,2) + Lc*skw_sym_outerprod_3(2,2));
-                                Tensor_B[2][3][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1]* (La*skw_sym_outerprod_1(2,3) + Lb*skw_sym_outerprod_2(2,3) + Lc*skw_sym_outerprod_3(2,3));
+                                Tensor_B[2][0][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(2,0) + Lb*skw_sym_outerprod_2(2,0) + Lc*skw_sym_outerprod_3(2,0));
+                                Tensor_B[2][1][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(2,1) + Lb*skw_sym_outerprod_2(2,1) + Lc*skw_sym_outerprod_3(2,1));
+                                Tensor_B[2][2][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1]* (La*skw_sym_outerprod_1(2,2) + Lb*skw_sym_outerprod_2(2,2) + Lc*skw_sym_outerprod_3(2,2));
+                                Tensor_B[2][3][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1]* (La*skw_sym_outerprod_1(2,3) + Lb*skw_sym_outerprod_2(2,3) + Lc*skw_sym_outerprod_3(2,3));
                                 
                                 
-                                Tensor_B[3][0][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(3,0) + Lb*skw_sym_outerprod_2(3,0) + Lc*skw_sym_outerprod_3(3,0));
-                                Tensor_B[3][1][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(3,1) + Lb*skw_sym_outerprod_2(3,1) + Lc*skw_sym_outerprod_3(3,1));
-                                Tensor_B[3][2][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(3,2) + Lb*skw_sym_outerprod_2(3,2) + Lc*skw_sym_outerprod_3(3,2));
-                                Tensor_B[3][3][o] = sf *Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(3,3) + Lb*skw_sym_outerprod_2(3,3) + Lc*skw_sym_outerprod_3(3,3));
+                                Tensor_B[3][0][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(3,0) + Lb*skw_sym_outerprod_2(3,0) + Lc*skw_sym_outerprod_3(3,0));
+                                Tensor_B[3][1][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(3,1) + Lb*skw_sym_outerprod_2(3,1) + Lc*skw_sym_outerprod_3(3,1));
+                                Tensor_B[3][2][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(3,2) + Lb*skw_sym_outerprod_2(3,2) + Lc*skw_sym_outerprod_3(3,2));
+                                Tensor_B[3][3][o] = 0.5 *Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * (La*skw_sym_outerprod_1(3,3) + Lb*skw_sym_outerprod_2(3,3) + Lc*skw_sym_outerprod_3(3,3));
                                 
                                 
                                 o++;
@@ -963,28 +858,28 @@ dof2tk1(dof), dof2tk2(dof) , doftrans(p)
                                 
                                 
                                 // Add Basis Funcitons
-                                Tensor_B[0][0][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * Int_Jacobi_m[Int_Jacobi_m.size()-1] * (La*skw_sym_outerprod_1(0,0) + Lb*skw_sym_outerprod_2(0,0) + Lc*skw_sym_outerprod_3(0,0));
-                                Tensor_B[0][1][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * Int_Jacobi_m[Int_Jacobi_m.size()-1] * (La*skw_sym_outerprod_1(0,1) + Lb*skw_sym_outerprod_2(0,1) + Lc*skw_sym_outerprod_3(0,1));
-                                Tensor_B[0][2][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * Int_Jacobi_m[Int_Jacobi_m.size()-1] * (La*skw_sym_outerprod_1(0,2) + Lb*skw_sym_outerprod_2(0,2) + Lc*skw_sym_outerprod_3(0,2));
-                                Tensor_B[0][3][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * Int_Jacobi_m[Int_Jacobi_m.size()-1] * (La*skw_sym_outerprod_1(0,3) + Lb*skw_sym_outerprod_2(0,3) + Lc*skw_sym_outerprod_3(0,3));
+                                Tensor_B[0][0][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * Int_Jacobi_m[Int_Jacobi_m.size()-1] * (La*skw_sym_outerprod_1(0,0) + Lb*skw_sym_outerprod_2(0,0) + Lc*skw_sym_outerprod_3(0,0));
+                                Tensor_B[0][1][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * Int_Jacobi_m[Int_Jacobi_m.size()-1] * (La*skw_sym_outerprod_1(0,1) + Lb*skw_sym_outerprod_2(0,1) + Lc*skw_sym_outerprod_3(0,1));
+                                Tensor_B[0][2][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * Int_Jacobi_m[Int_Jacobi_m.size()-1] * (La*skw_sym_outerprod_1(0,2) + Lb*skw_sym_outerprod_2(0,2) + Lc*skw_sym_outerprod_3(0,2));
+                                Tensor_B[0][3][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * Int_Jacobi_m[Int_Jacobi_m.size()-1] * (La*skw_sym_outerprod_1(0,3) + Lb*skw_sym_outerprod_2(0,3) + Lc*skw_sym_outerprod_3(0,3));
                                 
                                 
-                                Tensor_B[1][0][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * Int_Jacobi_m[Int_Jacobi_m.size()-1] * (La*skw_sym_outerprod_1(1,0) + Lb*skw_sym_outerprod_2(1,0) + Lc*skw_sym_outerprod_3(1,0));
-                                Tensor_B[1][1][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * Int_Jacobi_m[Int_Jacobi_m.size()-1] * (La*skw_sym_outerprod_1(1,1) + Lb*skw_sym_outerprod_2(1,1) + Lc*skw_sym_outerprod_3(1,1));
-                                Tensor_B[1][2][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * Int_Jacobi_m[Int_Jacobi_m.size()-1] * (La*skw_sym_outerprod_1(1,2) + Lb*skw_sym_outerprod_2(1,2) + Lc*skw_sym_outerprod_3(1,2));
-                                Tensor_B[1][3][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * Int_Jacobi_m[Int_Jacobi_m.size()-1] * (La*skw_sym_outerprod_1(1,3) + Lb*skw_sym_outerprod_2(1,3) + Lc*skw_sym_outerprod_3(1,3));
+                                Tensor_B[1][0][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * Int_Jacobi_m[Int_Jacobi_m.size()-1] * (La*skw_sym_outerprod_1(1,0) + Lb*skw_sym_outerprod_2(1,0) + Lc*skw_sym_outerprod_3(1,0));
+                                Tensor_B[1][1][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * Int_Jacobi_m[Int_Jacobi_m.size()-1] * (La*skw_sym_outerprod_1(1,1) + Lb*skw_sym_outerprod_2(1,1) + Lc*skw_sym_outerprod_3(1,1));
+                                Tensor_B[1][2][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * Int_Jacobi_m[Int_Jacobi_m.size()-1] * (La*skw_sym_outerprod_1(1,2) + Lb*skw_sym_outerprod_2(1,2) + Lc*skw_sym_outerprod_3(1,2));
+                                Tensor_B[1][3][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * Int_Jacobi_m[Int_Jacobi_m.size()-1] * (La*skw_sym_outerprod_1(1,3) + Lb*skw_sym_outerprod_2(1,3) + Lc*skw_sym_outerprod_3(1,3));
                                 
                                 
-                                Tensor_B[2][0][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * Int_Jacobi_m[Int_Jacobi_m.size()-1] * (La*skw_sym_outerprod_1(2,0) + Lb*skw_sym_outerprod_2(2,0) + Lc*skw_sym_outerprod_3(2,0));
-                                Tensor_B[2][1][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * Int_Jacobi_m[Int_Jacobi_m.size()-1] * (La*skw_sym_outerprod_1(2,1) + Lb*skw_sym_outerprod_2(2,1) + Lc*skw_sym_outerprod_3(2,1));
-                                Tensor_B[2][2][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * Int_Jacobi_m[Int_Jacobi_m.size()-1] * (La*skw_sym_outerprod_1(2,2) + Lb*skw_sym_outerprod_2(2,2) + Lc*skw_sym_outerprod_3(2,2));
-                                Tensor_B[2][3][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * Int_Jacobi_m[Int_Jacobi_m.size()-1] * (La*skw_sym_outerprod_1(2,3) + Lb*skw_sym_outerprod_2(2,3) + Lc*skw_sym_outerprod_3(2,3));
+                                Tensor_B[2][0][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * Int_Jacobi_m[Int_Jacobi_m.size()-1] * (La*skw_sym_outerprod_1(2,0) + Lb*skw_sym_outerprod_2(2,0) + Lc*skw_sym_outerprod_3(2,0));
+                                Tensor_B[2][1][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * Int_Jacobi_m[Int_Jacobi_m.size()-1] * (La*skw_sym_outerprod_1(2,1) + Lb*skw_sym_outerprod_2(2,1) + Lc*skw_sym_outerprod_3(2,1));
+                                Tensor_B[2][2][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * Int_Jacobi_m[Int_Jacobi_m.size()-1] * (La*skw_sym_outerprod_1(2,2) + Lb*skw_sym_outerprod_2(2,2) + Lc*skw_sym_outerprod_3(2,2));
+                                Tensor_B[2][3][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * Int_Jacobi_m[Int_Jacobi_m.size()-1] * (La*skw_sym_outerprod_1(2,3) + Lb*skw_sym_outerprod_2(2,3) + Lc*skw_sym_outerprod_3(2,3));
                                 
                                 
-                                Tensor_B[3][0][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * Int_Jacobi_m[Int_Jacobi_m.size()-1] * (La*skw_sym_outerprod_1(3,0) + Lb*skw_sym_outerprod_2(3,0) + Lc*skw_sym_outerprod_3(3,0));
-                                Tensor_B[3][1][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * Int_Jacobi_m[Int_Jacobi_m.size()-1] * (La*skw_sym_outerprod_1(3,1) + Lb*skw_sym_outerprod_2(3,1) + Lc*skw_sym_outerprod_3(3,1));
-                                Tensor_B[3][2][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * Int_Jacobi_m[Int_Jacobi_m.size()-1] * (La*skw_sym_outerprod_1(3,2) + Lb*skw_sym_outerprod_2(3,2) + Lc*skw_sym_outerprod_3(3,2));
-                                Tensor_B[3][3][o] = sf * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * Int_Jacobi_m[Int_Jacobi_m.size()-1] * (La*skw_sym_outerprod_1(3,3) + Lb*skw_sym_outerprod_2(3,3) + Lc*skw_sym_outerprod_3(3,3));
+                                Tensor_B[3][0][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * Int_Jacobi_m[Int_Jacobi_m.size()-1] * (La*skw_sym_outerprod_1(3,0) + Lb*skw_sym_outerprod_2(3,0) + Lc*skw_sym_outerprod_3(3,0));
+                                Tensor_B[3][1][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * Int_Jacobi_m[Int_Jacobi_m.size()-1] * (La*skw_sym_outerprod_1(3,1) + Lb*skw_sym_outerprod_2(3,1) + Lc*skw_sym_outerprod_3(3,1));
+                                Tensor_B[3][2][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * Int_Jacobi_m[Int_Jacobi_m.size()-1] * (La*skw_sym_outerprod_1(3,2) + Lb*skw_sym_outerprod_2(3,2) + Lc*skw_sym_outerprod_3(3,2));
+                                Tensor_B[3][3][o] = 0.5 * Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * Int_Jacobi_m[Int_Jacobi_m.size()-1] * (La*skw_sym_outerprod_1(3,3) + Lb*skw_sym_outerprod_2(3,3) + Lc*skw_sym_outerprod_3(3,3));
                                 
                                 o++;
                                 
@@ -1017,86 +912,20 @@ dof2tk1(dof), dof2tk2(dof) , doftrans(p)
                 for (int i = 0; i < 4; i++)
                 {
                     sum += Tensor_B[i][j][n] * tm1[i];
-                    //sum += Tensor_HC[i][j][n] * tm1[i];
-
                 }
                 // Store as transpose
                 Mat_B(n, j) = sum;
             }
         }
-//        
-//        std::cout << "Check Mat_B " << std::endl;
-//        for (int n = 0; n < dof; n++) {
-//            for (int j = 0; j < 4; j++) {
-//                std::cout << Mat_B(n,j) << ", ";
-//            }
-//            std::cout << std::endl;
-//        }
-//        std::ofstream T_file("T_4DCurl.txt");
-//        T.PrintMatlab(T_file);
-//        std::cout << "Vander Building" << std::endl;
-//        for (int row = 0; row < dof; row++)
-//        {
-//            for (int col = 0; col < dof; col++) {
-//                std::cout << ", " << T(row,col);
-//            }
-//            std::cout << std::endl;
-//
-//        }
-        //Mat_B = Mat_B * 0.5;
         Mat_B.Mult(tm2, T.GetColumn(q));
-//                std::cout << "Vander Building" << std::endl;
-//                for (int row = 0; row < num_dof; row++)
-//                {
-//                    for (int col = 0; col < num_dof; col++) {
-//                        std::cout << ", " << T(row,col);
-//                    }
-//                    std::cout << std::endl;
-//        
-//                }
-////
-//               std::cout << "End of Cycle" << std::endl;
-
     }
-        
-//    std::ofstream T_file("Vanderp2.txt");
-//    T.PrintMatlab(T_file);
-    
-    //DenseMatrix T_inv(dof);
-//    std::cout << "Check Vander " << std::endl;
-//    for (int n = 0; n < dof; n++) {
-//        for (int j = 0; j < dof; j++) 
-//        {
-//            std::cout << T(n,j) << ", ";
-//        }
-//        std::cout << std::endl;
-//    }
-
-    
+            
     DenseMatrixInverse T_temp(T);
     T_temp.GetInverseMatrix(T_inv); // M_inv now contains M^-1
-//    std::cout << "Check Vander " << std::endl;
-//    for (int n = 0; n < dof; n++) {
-//        for (int j = 0; j < dof; j++) {
-//            std::cout << T(n,j) << ", ";
-//        }
-//        std::cout << std::endl;
-//    }
-    //T_inv.Print();
-
-    
-    
-//    std::ofstream Ti_file("invVanderp2_Construc.txt");
-//    T_inv.PrintMatlab(Ti_file);
 
     //mfem::out << "HCurl_PentatopeElement(" << p << ") : "; T_inv.TestInversion(); // DO NOT USE ****
     
-    
 }
-
-
-
-
 
 
 void HCurl_PentatopeElement::CalcVShape(const IntegrationPoint &ip,
@@ -1106,7 +935,6 @@ void HCurl_PentatopeElement::CalcVShape(const IntegrationPoint &ip,
     
     const int p = order;
     int test_order = order;
-    //std::cout << "p_CalcShape = " << p << std::endl;
     int reset_o;
     
 #ifdef MFEM_THREAD_SAFE
@@ -1115,8 +943,6 @@ void HCurl_PentatopeElement::CalcVShape(const IntegrationPoint &ip,
     DenseMatrix u(Dof, Dim);
 #endif
     int size_ip = Nodes.Size();
-    //std::cout << "Inside" << std::endl;
-    //std::cout << "Int Point = " << ip.x << ", " << ip.y << ", " << ip.z << ", " << ip.t << std::endl;
     
     int o = 0;
     int num_dof = dof;
@@ -1148,9 +974,6 @@ void HCurl_PentatopeElement::CalcVShape(const IntegrationPoint &ip,
     {
 
         DenseMatrix result(4,4);
-        double s_factor = 1.0;
-        //std::cout << "Skw-sym Prod" << std::endl;
-        // "Forward" Product
         for (int i = 0; i < vec1.size(); ++i)
         {
             for (int j = 0; j < vec2.size(); ++j)
@@ -1162,29 +985,16 @@ void HCurl_PentatopeElement::CalcVShape(const IntegrationPoint &ip,
                 double outer_prod_2 = vec2[i] * vec1[j];
                 
                 // Compute Result
-                result(i,j) = s_factor*(outer_prod_1 - outer_prod_2);
-                //std::cout << s_factor*(outer_prod_1 - outer_prod_2) << std::endl;
+                result(i,j) = (outer_prod_1 - outer_prod_2);
             }
-            //std::cout << "New COl --------" << std::endl;
         }
         
         return result;
     }; // end of lamda function
 
     
-    
-    //Faces
-//    for(int i=0; i<p;i++)
-//    {
-//        for(int j=0; j<p;j++)
-//        {
-//            for(int a=0; a<5;a++)
-//            {
-//                for(int b=0; b<5;b++)
-//                {
-//                    for(int c=0; c<5;c++)
-//                    {
-    
+
+    // Faces
     for(int a=0; a<5;a++)
     {
         for(int b=0; b<5;b++)
@@ -1775,53 +1585,8 @@ void HCurl_PentatopeElement::CalcVShape(const IntegrationPoint &ip,
         
     }// End of Interiors
     
-    
-//    DenseMatrix u_unroll (num_dof,4*dim);
-//    // Now unroll and store in shape
-//    for (int l=0; l < num_dof; l++)
-//    {
-//        int N = 0;
-//        for (int j=0; j<dim; j++)
-//        {
-//            for (int k=0; k<dim; k++)
-//            {
-//                u_unroll(l,N) = u(l,j,k);
-//                N++;
-//            }
-//            
-//        }
-//    }
-//    
-//    std::ofstream A_file("Vanderinv_pre.txt");
-//    T_inv.PrintMatlab(A_file);
-    
-
-
-    
     DenseTensor shape_Ten(dof,dim,dim);
     
-    
-    // Reorder Code
-//    std::vector<int> map = {2,4,5,7,8,9,0,1,3,6};
-//
-//    double sf = 0.5;
-//    for (int l=0; l < num_dof; l++)
-//    {
-//        int N = 0;
-//        // index into map
-//        int m_ind = map[l];
-//        for (int j=0; j<dim; j++)
-//        {
-//            for (int k=0; k<dim; k++)
-//            {
-//                shape(l,N) = sf * u(m_ind,j,k);
-//                N++;
-//            }
-//            
-//        }
-//    }
-    
-//    Real Code
     for (int l=0; l < num_dof; l++)
     {
         for (int j=0; j<dim; j++)
@@ -1833,15 +1598,11 @@ void HCurl_PentatopeElement::CalcVShape(const IntegrationPoint &ip,
                 for (int m=0; m < num_dof; m++)
                 {
                     sum += T_inv(l,m) * u(m,j,k); // original
-                    //sum += T_inv(m,l) * u(m,j,k); // Dr. W change
                 }
                 shape_Ten(l,j,k) = sum;
             }
         }
     }
-    //std::cout << "Stop" << std::endl;
-    //std::cout << "Shape end of Vshpae: " << std::endl;
-    double sf = 0.5;
     // Now unroll and store in shape
     for (int l=0; l < num_dof; l++)
     {
@@ -1850,19 +1611,12 @@ void HCurl_PentatopeElement::CalcVShape(const IntegrationPoint &ip,
         {
             for (int k=0; k<dim; k++)
             {
-                shape(l,N) = sf * shape_Ten(l,j,k);
+                shape(l,N) = 0.5 * shape_Ten(l,j,k); // 0.5 factor include becuase of 2-form proxy
                 N++;
             }
             
         }
     }
-    
-    //std::ofstream B_file("Shape2_Vshape.txt");
-    //std::ofstream A_file("invVander2_Vshape.txt");
-
-    //shape.PrintMatlab(B_file);
-
-
 
 }
 
@@ -1880,11 +1634,7 @@ void HCurl_PentatopeElement::CalcCurlShape(const IntegrationPoint &ip,
     DenseMatrix u(Dof, Dim);
 #endif
     int size_ip = Nodes.Size();
-    //int num_func =
     Curlu.SetSize(dof, int(4));
-
-    //std::cout << "Int Point = " << ip.x << ", " << ip.y << ", " << ip.z << ", " << ip.t << std::endl;
-    
     int o = 0;
     int num_dof = dof;
     
@@ -1912,8 +1662,6 @@ void HCurl_PentatopeElement::CalcCurlShape(const IntegrationPoint &ip,
     {
 
         DenseMatrix result(4,4);
-        //std::cout << "Skw-sym Prod" << std::endl;
-        // "Forward" Product
         for (int i = 0; i < vec1.size(); ++i)
         {
             for (int j = 0; j < vec2.size(); ++j)
@@ -1925,10 +1673,8 @@ void HCurl_PentatopeElement::CalcCurlShape(const IntegrationPoint &ip,
                 double outer_prod_2 = vec2[i] * vec1[j];
                 
                 // Compute Result
-                result(i,j) = s_factor*(outer_prod_1 - outer_prod_2);
-                //std::cout << 0.5*(outer_prod_1 - outer_prod_2) << std::endl;
+                result(i,j) = (outer_prod_1 - outer_prod_2);
             }
-            //std::cout << "New COl --------" << std::endl;
         }
         
         return result;
@@ -1963,12 +1709,9 @@ void HCurl_PentatopeElement::CalcCurlShape(const IntegrationPoint &ip,
                             std::vector<double> Legendre_i_dt;
                             double x = Lb;
                             double y = La + Lb;
-                            //poly1d.CalcLegendreShifted(i, x, y, Legendre_i);
                             poly1d.CalcScaledLegendreDerivative(i, x, y, Legendre_i, Legendre_i_dx, Legendre_i_dt);
 
-                            
-
-                            
+                    
                             std::vector<double> Jacobi_j;
                             std::vector<double> Jacobi_j_ref;
                             x = Lc;
@@ -1979,17 +1722,7 @@ void HCurl_PentatopeElement::CalcCurlShape(const IntegrationPoint &ip,
                             std::vector<double> Jacobi_j_dx;
                             std::vector<double> Jacobi_j_dt;
                             poly1d.CalcScaledJacobiDerivative(j, alpha, x, y, Jacobi_j_ref, Jacobi_j_dx, Jacobi_j_dt);
-                            
-
-                            
-                            // Scaled Skew-sym outer product
-                            DenseMatrix skw_sym_outerprod_1 = skw_sym_outerprod_fnc(grad_Lb, grad_Lc);
-
-                            DenseMatrix skw_sym_outerprod_2 = skw_sym_outerprod_fnc(grad_Lc, grad_La);
-
-                            DenseMatrix skw_sym_outerprod_3 = skw_sym_outerprod_fnc(grad_La, grad_Lb);
-                            
-                            
+                                                        
                             
                             // grad of Legendre and Jacobi Polynomials (scalar part)
                             double dscalar_x = (Legendre_i_dx[Legendre_i_dx.size()-1]*grad_Lb[0] + Legendre_i_dt[Legendre_i_dt.size()-1]*(grad_La[0] + grad_Lb[0])) * Jacobi_j[Jacobi_j.size()-1]
@@ -2013,7 +1746,6 @@ void HCurl_PentatopeElement::CalcCurlShape(const IntegrationPoint &ip,
                             
                             
                             // curl of skw-sym part
-                            
                             std::vector<double> F_vec(4);
                             // x-component
                             F_vec[0] = 2.0 * ( grad_La[1]*(grad_Lb[2]*grad_Lc[3] - grad_Lc[2]*grad_Lb[3]) + grad_Lb[1]*(grad_Lc[2]*grad_La[3] - grad_La[2]*grad_Lc[3]) + grad_Lc[1]*(grad_La[2]*grad_Lb[3] - grad_Lb[2]*grad_La[3]) )
@@ -2100,15 +1832,14 @@ void HCurl_PentatopeElement::CalcCurlShape(const IntegrationPoint &ip,
                             
                             
                             // Add Basis Funcitons
-                            double s_factor = 0.5;
                             
-                            Curlu(o, 0) = s_factor * ( (Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * F_vec[0]) + McrossN[0] );
+                            Curlu(o, 0) = 0.5 * ( (Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * F_vec[0]) + McrossN[0] );
                             
-                            Curlu(o, 1) = s_factor * ( (Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * F_vec[1]) + McrossN[1] );
+                            Curlu(o, 1) = 0.5 * ( (Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * F_vec[1]) + McrossN[1] );
 
-                            Curlu(o, 2) = s_factor * ( (Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * F_vec[2]) + McrossN[2] );
+                            Curlu(o, 2) = 0.5 * ( (Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * F_vec[2]) + McrossN[2] );
 
-                            Curlu(o, 3) = s_factor * ( (Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * F_vec[3]) + McrossN[3] );
+                            Curlu(o, 3) = 0.5 * ( (Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * F_vec[3]) + McrossN[3] );
                             
 
                             o++;
@@ -2217,12 +1948,8 @@ void HCurl_PentatopeElement::CalcCurlShape(const IntegrationPoint &ip,
                             std::vector<double> Legendre_i_dt;
                             double x = Lb;
                             double y = La + Lb;
-                            //poly1d.CalcLegendreShifted(i, x, y, Legendre_i);
                             poly1d.CalcScaledLegendreDerivative(i, x, y, Legendre_i, Legendre_i_dx, Legendre_i_dt);
 
-                            
-
-                            
                             std::vector<double> Jacobi_j;
                             std::vector<double> Jacobi_j_ref;
                             x = Lc;
@@ -2244,16 +1971,6 @@ void HCurl_PentatopeElement::CalcCurlShape(const IntegrationPoint &ip,
                             poly1d.CalcIntJacobi(l, x, y, alpha, Int_Jacobi_l);
                             poly1d.CalcJacobi(l, x, y, alpha, Jacobi_l);
                             poly1d.CalcRJacobi(l, x, y, alpha, R_l);
-                            
-
-                            
-                            // Scaled Skew-sym outer product
-                            DenseMatrix skw_sym_outerprod_1 = skw_sym_outerprod_fnc(grad_Lb, grad_Lc);
-
-                            DenseMatrix skw_sym_outerprod_2 = skw_sym_outerprod_fnc(grad_Lc, grad_La);
-
-                            DenseMatrix skw_sym_outerprod_3 = skw_sym_outerprod_fnc(grad_La, grad_Lb);
-                            
                             
                             
                             // grad of Legendre and Jacobi Polynomials (scalar part)
@@ -2284,11 +2001,7 @@ void HCurl_PentatopeElement::CalcCurlShape(const IntegrationPoint &ip,
                             
                             + Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * (Jacobi_l[Jacobi_l.size()-2]*grad_Ld[3] + R_l[R_l.size()-2] * (grad_La[3] + grad_Lb[3] + grad_Lc[3] + grad_Ld[3]));
                             
-                            
-                            
-
-                            
-                            
+  
                             // curl of skw-sym part
                             
                             std::vector<double> F_vec(4);
@@ -2377,15 +2090,14 @@ void HCurl_PentatopeElement::CalcCurlShape(const IntegrationPoint &ip,
                             
                             
                             // Add Basis Funcitons
-                            double s_factor = 0.5;
                             
-                            Curlu(o, 0) = s_factor * ( (Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * F_vec[0]) + McrossN[0] );
+                            Curlu(o, 0) = 0.5 * ( (Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * F_vec[0]) + McrossN[0] );
                             
-                            Curlu(o, 1) = s_factor * ( (Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * F_vec[1]) + McrossN[1] );
+                            Curlu(o, 1) = 0.5 * ( (Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * F_vec[1]) + McrossN[1] );
 
-                            Curlu(o, 2) = s_factor * ( (Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * F_vec[2]) + McrossN[2] );
+                            Curlu(o, 2) = 0.5 * ( (Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * F_vec[2]) + McrossN[2] );
 
-                            Curlu(o, 3) = s_factor * ( (Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * F_vec[3]) + McrossN[3] );
+                            Curlu(o, 3) = 0.5 * ( (Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * F_vec[3]) + McrossN[3] );
                             
 
                             o++;
@@ -2418,12 +2130,8 @@ void HCurl_PentatopeElement::CalcCurlShape(const IntegrationPoint &ip,
                             std::vector<double> Legendre_i_dt;
                             double x = Lb;
                             double y = La + Lb;
-                            //poly1d.CalcLegendreShifted(i, x, y, Legendre_i);
                             poly1d.CalcScaledLegendreDerivative(i, x, y, Legendre_i, Legendre_i_dx, Legendre_i_dt);
 
-                            
-
-                            
                             std::vector<double> Jacobi_j;
                             std::vector<double> Jacobi_j_ref;
                             x = Lc;
@@ -2445,15 +2153,6 @@ void HCurl_PentatopeElement::CalcCurlShape(const IntegrationPoint &ip,
                             poly1d.CalcIntJacobi(l, x, y, alpha, Int_Jacobi_l);
                             poly1d.CalcJacobi(l, x, y, alpha, Jacobi_l);
                             poly1d.CalcRJacobi(l, x, y, alpha, R_l);
-                            
-
-                            
-                            // Scaled Skew-sym outer product
-                            DenseMatrix skw_sym_outerprod_1 = skw_sym_outerprod_fnc(grad_Lb, grad_Lc);
-
-                            DenseMatrix skw_sym_outerprod_2 = skw_sym_outerprod_fnc(grad_Lc, grad_La);
-
-                            DenseMatrix skw_sym_outerprod_3 = skw_sym_outerprod_fnc(grad_La, grad_Lb);
                             
                             
                             
@@ -2485,9 +2184,6 @@ void HCurl_PentatopeElement::CalcCurlShape(const IntegrationPoint &ip,
                             
                             + Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * (Jacobi_l[Jacobi_l.size()-2]*grad_Ld[3] + R_l[R_l.size()-2] * (grad_La[3] + grad_Lb[3] + grad_Lc[3] + grad_Ld[3]));
                             
-                            
-                            
-
                             
                             
                             // curl of skw-sym part
@@ -2578,15 +2274,14 @@ void HCurl_PentatopeElement::CalcCurlShape(const IntegrationPoint &ip,
                             
                             
                             // Add Basis Funcitons
-                            double s_factor = 0.5;
                             
-                            Curlu(o, 0) = s_factor * ( (Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * F_vec[0]) + McrossN[0] );
+                            Curlu(o, 0) = 0.5 * ( (Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * F_vec[0]) + McrossN[0] );
                             
-                            Curlu(o, 1) = s_factor * ( (Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * F_vec[1]) + McrossN[1] );
+                            Curlu(o, 1) = 0.5 * ( (Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * F_vec[1]) + McrossN[1] );
 
-                            Curlu(o, 2) = s_factor * ( (Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * F_vec[2]) + McrossN[2] );
+                            Curlu(o, 2) = 0.5 * ( (Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * F_vec[2]) + McrossN[2] );
 
-                            Curlu(o, 3) = s_factor * ( (Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * F_vec[3]) + McrossN[3] );
+                            Curlu(o, 3) = 0.5 * ( (Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * F_vec[3]) + McrossN[3] );
                             
 
                             o++;
@@ -2617,12 +2312,9 @@ void HCurl_PentatopeElement::CalcCurlShape(const IntegrationPoint &ip,
                             std::vector<double> Legendre_i_dt;
                             double x = Lb;
                             double y = La + Lb;
-                            //poly1d.CalcLegendreShifted(i, x, y, Legendre_i);
                             poly1d.CalcScaledLegendreDerivative(i, x, y, Legendre_i, Legendre_i_dx, Legendre_i_dt);
 
-                            
 
-                            
                             std::vector<double> Jacobi_j;
                             std::vector<double> Jacobi_j_ref;
                             x = Lc;
@@ -2646,15 +2338,6 @@ void HCurl_PentatopeElement::CalcCurlShape(const IntegrationPoint &ip,
                             poly1d.CalcRJacobi(l, x, y, alpha, R_l);
                             
 
-                            
-                            // Scaled Skew-sym outer product
-                            DenseMatrix skw_sym_outerprod_1 = skw_sym_outerprod_fnc(grad_Lb, grad_Lc);
-
-                            DenseMatrix skw_sym_outerprod_2 = skw_sym_outerprod_fnc(grad_Lc, grad_La);
-
-                            DenseMatrix skw_sym_outerprod_3 = skw_sym_outerprod_fnc(grad_La, grad_Lb);
-                            
-                            
                             
                             // grad of Legendre and Jacobi Polynomials (scalar part)
                             double dscalar_x = (Legendre_i_dx[Legendre_i_dx.size()-1]*grad_Lb[0] + Legendre_i_dt[Legendre_i_dt.size()-1]*(grad_La[0] + grad_Lb[0])) * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1]
@@ -2684,9 +2367,6 @@ void HCurl_PentatopeElement::CalcCurlShape(const IntegrationPoint &ip,
                             
                             + Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * (Jacobi_l[Jacobi_l.size()-2]*grad_Ld[3] + R_l[R_l.size()-2] * (grad_La[3] + grad_Lb[3] + grad_Lc[3] + grad_Ld[3]));
                             
-                            
-                            
-
                             
                             
                             // curl of skw-sym part
@@ -2777,15 +2457,14 @@ void HCurl_PentatopeElement::CalcCurlShape(const IntegrationPoint &ip,
                             
                             
                             // Add Basis Funcitons
-                            double s_factor = 0.5;
                             
-                            Curlu(o, 0) = s_factor * ( (Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * F_vec[0]) + McrossN[0] );
+                            Curlu(o, 0) = 0.5 * ( (Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * F_vec[0]) + McrossN[0] );
                             
-                            Curlu(o, 1) = s_factor * ( (Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * F_vec[1]) + McrossN[1] );
+                            Curlu(o, 1) = 0.5 * ( (Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * F_vec[1]) + McrossN[1] );
 
-                            Curlu(o, 2) = s_factor * ( (Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * F_vec[2]) + McrossN[2] );
+                            Curlu(o, 2) = 0.5 * ( (Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * F_vec[2]) + McrossN[2] );
 
-                            Curlu(o, 3) = s_factor * ( (Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * F_vec[3]) + McrossN[3] );
+                            Curlu(o, 3) = 0.5 * ( (Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * F_vec[3]) + McrossN[3] );
                             
 
                             o++;
@@ -2970,7 +2649,6 @@ void HCurl_PentatopeElement::CalcCurlShape(const IntegrationPoint &ip,
                             std::vector<double> Legendre_i_dt;
                             double x = Lb;
                             double y = La + Lb;
-                            //poly1d.CalcLegendreShifted(i, x, y, Legendre_i);
                             poly1d.CalcScaledLegendreDerivative(i, x, y, Legendre_i, Legendre_i_dx, Legendre_i_dt);
 
                         
@@ -2998,23 +2676,12 @@ void HCurl_PentatopeElement::CalcCurlShape(const IntegrationPoint &ip,
                             
                             std::vector<double> Int_Jacobi_m;
                             std::vector<double> Jacobi_m;
-                            //std::vector<double> R_m;
                             x = Le;
                             y = 1.0;
                             alpha = 2*(i + j + l);
                             poly1d.CalcIntJacobi(m, x, y, alpha, Int_Jacobi_m);
                             poly1d.CalcJacobi(m, x, y, alpha, Jacobi_m);
-                            //poly1d.CalcRJacobi(m, x, y, alpha, R_m);
-                            
 
-                            
-                            // Scaled Skew-sym outer product
-                            DenseMatrix skw_sym_outerprod_1 = skw_sym_outerprod_fnc(grad_Lb, grad_Lc);
-
-                            DenseMatrix skw_sym_outerprod_2 = skw_sym_outerprod_fnc(grad_Lc, grad_La);
-
-                            DenseMatrix skw_sym_outerprod_3 = skw_sym_outerprod_fnc(grad_La, grad_Lb);
-                            
                             
                             
                             // grad of Legendre and Jacobi Polynomials (scalar part)
@@ -3144,17 +2811,14 @@ void HCurl_PentatopeElement::CalcCurlShape(const IntegrationPoint &ip,
                             
                             
                             // Add Basis Funcitons
-                            double s_factor = 0.5;
                             
-                            Curlu(o, 0) = s_factor * ( (Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * Int_Jacobi_m[Int_Jacobi_m.size()-1] * F_vec[0]) + McrossN[0] );
+                            Curlu(o, 0) = 0.5 * ( (Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * Int_Jacobi_m[Int_Jacobi_m.size()-1] * F_vec[0]) + McrossN[0] );
                             
-                            Curlu(o, 1) = s_factor * ( (Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * Int_Jacobi_m[Int_Jacobi_m.size()-1] * F_vec[1]) + McrossN[1] );
+                            Curlu(o, 1) = 0.5 * ( (Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * Int_Jacobi_m[Int_Jacobi_m.size()-1] * F_vec[1]) + McrossN[1] );
 
-                            Curlu(o, 2) = s_factor * ( (Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * Int_Jacobi_m[Int_Jacobi_m.size()-1] * F_vec[2]) + McrossN[2] );
+                            Curlu(o, 2) = 0.5 * ( (Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * Int_Jacobi_m[Int_Jacobi_m.size()-1] * F_vec[2]) + McrossN[2] );
 
-                            Curlu(o, 3) = s_factor * ( (Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * Int_Jacobi_m[Int_Jacobi_m.size()-1] * F_vec[3]) + McrossN[3] );
-                            
-
+                            Curlu(o, 3) = 0.5 * ( (Legendre_i[Legendre_i.size()-1] * Jacobi_j[Jacobi_j.size()-1] * Int_Jacobi_l[Int_Jacobi_l.size()-1] * Int_Jacobi_m[Int_Jacobi_m.size()-1] * F_vec[3]) + McrossN[3] );
                         
                             o++;
                             
@@ -3179,18 +2843,7 @@ void HCurl_PentatopeElement::CalcCurlShape(const IntegrationPoint &ip,
             }
         }
     }
-                    
-   
-    // Real Code
-    //Ti.Mult(Curlu, Curlshape);
-
-
-//    std::cout << "Curl Shape ------" << std::endl;
-//    for (int nfnc=0; nfnc<10; nfnc++)
-//    {
-//        std::cout << Curlshape(nfnc,0) << ", " << Curlshape(nfnc,1) << ", " << Curlshape(nfnc,2) << ", " <<  Curlshape(nfnc,3) << std::endl;
-//    }
-
+                
 
 }
 
@@ -3216,22 +2869,6 @@ void HCurl_PentatopeElement::Project (
 
        vc.Eval(v, Trans, Nodes.IntPoint (k));
         
-//       std::cout << "Start of Project Evaulation (vector) Check" << std::endl;
-//       std::cout << v(0) << std::endl;
-//       std::cout << v(1) << std::endl;
-//       std::cout << v(2) << std::endl;
-//       std::cout << v(3) << std::endl;
-//       std::cout << v(4) <<  std::endl;
-//       std::cout << v(5) << std::endl;
-
-
-
-       // New Proxy
-//                            mat(0,1) =  v(0); mat(0,2) = v(1);  mat(0,3) =  v(2);
-//         mat(1,0) = -v(0);                    mat(1,2) =  v(3); mat(1,3) = v(4);
-//         mat(2,0) =  -v(1); mat(2,1) = -v(3);                   mat(2,3) =  v(5);
-//         mat(3,0) = -v(2);  mat(3,1) = -v(4); mat(3,2) = -v(5);
-        
         // New Proxy
                              mat(0,1) =  v(0); mat(0,2) =  v(1); mat(0,3) =  v(2);
           mat(1,0) = v(6);                     mat(1,2) =  v(3); mat(1,3) =  v(4);
@@ -3245,7 +2882,6 @@ void HCurl_PentatopeElement::Project (
        mat.Mult(t2i, Mt);
         
        dofs(k) = t1i * Mt;
-       //std::cout << "dof(" << k << ") = " << t1i * Mt << std::endl;
     }
 
 }

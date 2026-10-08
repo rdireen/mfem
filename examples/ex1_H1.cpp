@@ -67,7 +67,6 @@ using namespace mfem;
 // Exact solution, E, and r.h.s., f. See below for implementation.
 double E_exact(const Vector &);
 double f_exact(const Vector &);
-double Q_exact(const Vector &);
 double freq = 1.0, kappa;
 int dim;
 
@@ -122,14 +121,13 @@ int main(int argc, char *argv[])
     //    'ref_levels' of uniform refinement. We choose 'ref_levels' to be the
     //    largest number that gives a final mesh with no more than 50,000
     //    elements.
+    
+    std::cout << "ref_levels = " << ref_levels << std::endl;
+    for (int l = 0; l < ref_levels; l++)
     {
-        //int ref_levels = (int)floor(log(50000./mesh->GetNE())/log(2.)/dim);
-        std::cout << "ref_levels = " << ref_levels << std::endl;
-        for (int l = 0; l < ref_levels; l++)
-        {
-            mesh->UniformRefinement();
-        }
+        mesh->UniformRefinement();
     }
+    
     
     // 5. Define a finite element space on the mesh. Here we use continuous
     //    Lagrange finite elements of the specified order. If order < 1, we
@@ -177,21 +175,15 @@ int main(int argc, char *argv[])
     b->AddDomainIntegrator(new DomainLFIntegrator(f));
     b->Assemble();
     
-    ConstantCoefficient one(1.0);
-    /*
-     LinearForm *b = new LinearForm(fespace);
-     b->AddDomainIntegrator(new DomainLFIntegrator(one));
-     b->Assemble();
-     */
-    
+
     // 8. Define the solution vector x as a finite element grid function
     //    corresponding to fespace. Initialize x by projecting the exact
     //    solution. Note that only values from the boundary edges will be used
     //    when eliminating the non-homogeneous boundary condition to modify the
     //    r.h.s. vector b.
     GridFunction x(fespace);
+    ConstantCoefficient one(1.0);
     FunctionCoefficient E(E_exact);
-    FunctionCoefficient Q(Q_exact);
     x.ProjectCoefficient(E);
     
     const IntegrationRule* irs[Geometry::NumGeom];
@@ -219,8 +211,6 @@ int main(int argc, char *argv[])
    BilinearForm *a = new BilinearForm(fespace);
    if (pa) { a->SetAssemblyLevel(AssemblyLevel::PARTIAL); }
    a->AddDomainIntegrator(new DiffusionIntegrator(one)); // -Delta u
-//    a->AddDomainIntegrator(new DiffusionIntegrator(f)); // - div(f grad u)
-   //a->AddDomainIntegrator(new DiffusionIntegrator(*f));
     
    // 10. Assemble the bilinear form and the corresponding linear system,
    //     applying any necessary transformations such as: eliminating boundary
@@ -228,23 +218,12 @@ int main(int argc, char *argv[])
    //     static condensation, etc.
    if (static_cond) { a->EnableStaticCondensation(); }
     
-   //cout << "Madeit" << std::endl;
-
    a->Assemble();
-    
-   //cout << "Madeit2" << std::endl;
-
 
    OperatorPtr A;
    Vector B, X;
    a->FormLinearSystem(ess_tdof_list, x, *b, A, X, B); // x = x_ess + X
    // A*X = f - A*x_ess = B
-
-//    std::ofstream A_file("A_matrix.txt");
-//
-//    A->PrintMatlab(A_file);
-
-
    cout << "Size of linear system: " << A->Height() << endl;
 
    // 11. Solve the linear system A X = B.
@@ -362,39 +341,6 @@ double E_exact(const Vector &x)
     return E_out;
 }
 
-double Q_exact(const Vector &x)
-{
-    double Q_out;
-
-    if (dim == 2)
-    {
-        //Q_out = x(0)*x(1);
-        Q_out = 1.0;
-    }
-    
-    if (dim == 3)
-    {
-        //Q_out = x(0)*(1. - x(0)) * x(1)*(1. - x(1)) * x(2)*(1. - x(2));
-        //Q_out = x(0)*x(1)*x(2)*x(0)*x(1)*x(2)*x(0);
-        Q_out = 1.0;
-    }
-    
-    if (dim == 4)
-    {
-        //Q_out = x(0)*x(1)*x(2)*x(3)*x(0)*x(1)*x(2);
-        Q_out = 1.0;
-        
-        //Q_out = x(0)*(1. - x(0)) * x(1)*(1. - x(1)) * x(2)*(1. - x(2)) * x(3)*(1. - x(3));
-        
-        //Q_out = x(0)*x(1)*x(2)*x(3)*(1.0 - x(0) - x(1) - x(2) - x(3));
-        
-        
-        //Q_out = x(0) * x(1) * x(2) * x(3) *  (1.0 -  x(0) - x(1) * x(2));
-
-    }
-    
-    return Q_out;
-}
 
 double f_exact(const Vector &x)
 {

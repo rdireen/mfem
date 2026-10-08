@@ -96,7 +96,6 @@ int main(int argc, char *argv[])
       return 1;
    }
    args.PrintOptions(cout);
-   //kappa = freq * M_PI;
    kappa = 1.0;
 
    // 2. Enable hardware devices such as GPUs, and programming models such as
@@ -121,20 +120,16 @@ int main(int argc, char *argv[])
    //    'ref_levels' of uniform refinement. We choose 'ref_levels' to be the
    //    largest number that gives a final mesh with no more than 50,000
    //    elements.
+   
+   for (int l = 0; l < ref_levels; l++)
    {
-      //int ref_levels =
-         //(int)floor(log(50000./mesh->GetNE())/log(2.)/dim);
-      for (int l = 0; l < ref_levels; l++)
-      {
-         mesh->UniformRefinement();
-      }
+      mesh->UniformRefinement();
    }
+   
 
    // 5. Define a finite element space on the mesh. Here we use the Nedelec
    //    finite elements of the specified order.
-   //FiniteElementCollection *fec = new ND_FECollection(order, dim);
    FiniteElementCollection *fec = new SkwGrad_FECollection(order, dim);
-   //FiniteElementCollection *fec = new ND1_4DFECollection();
    FiniteElementSpace *fespace = new FiniteElementSpace(mesh, fec);
    cout << "Number of finite element unknowns: "
         << fespace->GetTrueVSize() << endl;
@@ -188,8 +183,7 @@ int main(int argc, char *argv[])
     }
     
    cout << "\n Initial || E_h - E ||_{L^2} = " << x.ComputeL2Error(E,irs) << '\n' << endl;
-   //cout << "Number of finite element unknowns: "
-         //<< fespace->GetTrueVSize() << endl;
+
    
    // 9. Set up the bilinear form corresponding to the EM diffusion operator
    //    curl muinv curl + sigma I, by adding the curl-curl and the mass domain
@@ -198,7 +192,6 @@ int main(int argc, char *argv[])
    Coefficient *sigma = new ConstantCoefficient(1.0);
    BilinearForm *a = new BilinearForm(fespace);
    if (pa) { a->SetAssemblyLevel(AssemblyLevel::PARTIAL); }
-   //a->AddDomainIntegrator(new CurlCurlIntegrator(*muinv));
    a->AddDomainIntegrator(new SkwGradSkwGradIntegrator(*muinv));
    a->AddDomainIntegrator(new VectorFEMassIntegrator(*sigma));
 
@@ -288,46 +281,6 @@ void E_exact(const Vector &x, Vector &E)
         real_t z = x(2);
         real_t t = x(3);
         
-        // Used for Full Problem
-        
-//        E(0) = sin(kappa * y);
-//        E(1) = sin(kappa * z);
-//        E(2) = sin(kappa * t);
-//        E(3) = sin(kappa * v);
-        
-        // Function for Projection Study
-         // Used for fifth order study
-//        E(0) = v*v*v*v*v + y + z + t;
-//        E(1) = 2.0*(v + y*y*y*y*y + z + t);
-//        E(2) = 3.0*(v + y + z*z*z*z*z + t);
-//        E(3) = 0.5*(v + y + z + t*t*t*t*t);
-//        // Used for fourth order study
-//        E(0) = v*v*v*v + y + z + t;
-//        E(1) = 2.0*(v + y*y*y*y + z + t);
-//        E(2) = 3.0*(v + y + z*z*z*z + t);
-//        E(3) = 0.5*(v + y + z + t*t*t*t);
-        // Used for thrid order study
-//        E(0) = v*v*v + y + z + t;
-//        E(1) = 2.0*(v + y*y*y + z + t);
-//        E(2) = 3.0*(v + y + z*z*z + t);
-//        E(3) = 0.5*(v + y + z + t*t*t);
-        // Used for second order study
-//        E(0) = v*v + y + z + t;
-//        E(1) = 2.0*(v + y*y + z + t);
-//        E(2) = 3.0*(v + y + z*z + t);
-//        E(3) = 0.5*(v + y + z + t*t);
-//
-         //Used for first order study
-//        E(0) = v;
-//        E(1) = y;
-//        E(2) = z;
-//        E(3) = t;
-        // Constant
-//           E(0) = 1.0;
-//           E(1) = 1.0;
-//           E(2) = 1.0;
-//           E(3) = 1.0;
-        
         E(0) =  sin(M_PI*x(0))*cos(M_PI*x(1))*cos(M_PI*x(2))*cos(M_PI*x(3));
         E(1) = -cos(M_PI*x(0))*sin(M_PI*x(1))*cos(M_PI*x(2))*cos(M_PI*x(3));
         E(2) =  cos(M_PI*x(0))*cos(M_PI*x(1))*sin(M_PI*x(2))*cos(M_PI*x(3));
@@ -348,8 +301,7 @@ void E_exact(const Vector &x, Vector &E)
    {
        real_t v = x(0);
        real_t y = x(1);
-//       E(0) = 1.0;
-//       E(1) = 1.0;
+       
        E(0) = 2.0*(v + y);
        E(1) = 0.5*(v + y);
    }
@@ -364,29 +316,6 @@ void f_exact(const Vector &x, Vector &f)
         real_t z = x(2);
         real_t t = x(3);
         
-//        f(0) = 1.0;
-//        f(1) = 1.0;
-//        f(2) = 1.0;
-//        f(3) = 1.0;
-        
-//        f(0) = v;
-//        f(1) = y;
-//        f(2) = z;
-//        f(3) = t;
-
-       
-        
-//        // Forcing Function for "Curl"
-//        f(0) = (2.0*kappa*kappa * sin(kappa * y) + sin(kappa * y));
-//        f(1) = (2.0*kappa*kappa * sin(kappa * z) + sin(kappa * z));
-//        f(2) = (2.0*kappa*kappa * sin(kappa * t) + sin(kappa * t));
-//        f(3) = (2.0*kappa*kappa * sin(kappa * v) + sin(kappa * v));
-        
-         //Forcing Function for "SkwGrad"
-//        f(0) = (0.5*kappa*kappa * sin(kappa * y) + sin(kappa * y));
-//        f(1) = (0.5*kappa*kappa * sin(kappa * z) + sin(kappa * z));
-//        f(2) = (0.5*kappa*kappa * sin(kappa * t) + sin(kappa * t));
-//        f(3) = (0.5*kappa*kappa * sin(kappa * v) + sin(kappa * v));
         double s_factor = 0.5;
         
         f(0) =  (1.0+4.0*s_factor*M_PI*M_PI)*sin(M_PI*x(0))*cos(M_PI*x(1))*cos(M_PI*x(2))*cos(
