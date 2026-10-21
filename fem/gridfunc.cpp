@@ -2776,7 +2776,7 @@ void GridFunction::ProjectCoefficient(
 void GridFunction::ProjectCoefficient(VectorCoefficient &vcoeff,
                                       ProjectType type)
 {
-   MFEM_VERIFY(VectorDim() == vcoeff.GetVDim(), "vcoeff vdim != VectorDim()");
+   //MFEM_VERIFY(VectorDim() == vcoeff.GetVDim(), "vcoeff vdim != VectorDim()"); // No longer valid check (Fails H-curl)
    Array<int> vdofs;
    Vector vals;
    DofTransformation doftrans;

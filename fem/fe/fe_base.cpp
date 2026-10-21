@@ -1061,9 +1061,15 @@ void VectorFiniteElement::SetDerivMembers()
          deriv_type = SkwGrad;
          deriv_range_type = MAT_SKEW;
          deriv_map_type = INTEGRAL;
+         break;
       case H_DIV:
          switch (dim)
          {
+            case 4: // div: 4d H_DIV -> 4D INTEGRAL
+               deriv_type = DIV;
+               deriv_range_type = SCALAR;
+               deriv_map_type = INTEGRAL;
+               break;
             case 3: // div: 3D H_DIV -> 3D INTEGRAL
                deriv_type = DIV;
                deriv_range_type = SCALAR;

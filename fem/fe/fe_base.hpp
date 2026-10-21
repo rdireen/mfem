@@ -347,7 +347,7 @@ public:
       H_DIV_R1D, /**< For 3-component vector fields in 1D; equivalent to a
                           direct sum of a VALUE basis and a pair of INTEGRAL
                           bases */
-       H_CURL_R1D,  /**< For 3-component vector fields in 1D; equivalent to a
+      H_CURL_R1D,  /**< For 3-component vector fields in 1D; equivalent to a
                           direct sum of an INTEGRAL basis and a pair of VALUE
                           bases */
       H_DIV_SKEW, /**< For Matrix basis; preserves face integrals of the tangential components*/

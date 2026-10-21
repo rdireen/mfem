@@ -91,7 +91,7 @@ int main(int argc, char *argv[])
     
    if (kappa < 0)
    {
-      kappa = 50*(order+1)*(order+2);
+      kappa = 3*(order+1)*(order+2);
    }
    args.PrintOptions(cout);
 
